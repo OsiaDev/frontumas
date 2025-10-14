@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+    /* Colores personalizados */
+    --color-primary: #004599;
+    --color-background-light: #f5f7f8;
+    --color-background-dark: #0f1823;
+
+    /* Font Family */
+    --font-display: 'Space Grotesk', sans-serif;
+}
+
+@layer base {
+    body {
+        font-family: 'Nunito Sans', sans-serif;
+    }
+}
+
+@layer utilities {
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+}
