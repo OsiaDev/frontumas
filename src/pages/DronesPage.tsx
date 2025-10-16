@@ -1,27 +1,23 @@
-import { MqttStatus } from '@components/api/MqttStatus';
-import { DroneStats } from '@components/api/DroneStats';
-import { DroneList } from '@components/api/DroneList';
+import { MqttStatus } from '@components/drone/MqttStatus';
+import { DroneStats } from '@components/drone/DroneStats';
+import { DroneList } from '@components/drone/DroneList';
 
-export const DashboardPage = () => {
+export const DronesPage = () => {
     return (
         <div className="space-y-6">
-            {/* Header */}
             <div>
                 <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                    Dashboard
+                    Gestión de Drones
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400">
                     Monitoreo en tiempo real - Fuerza Aeroespacial Colombiana
                 </p>
             </div>
 
-            {/* MQTT Status */}
             <MqttStatus />
 
-            {/* Drone Statistics */}
             <DroneStats />
 
-            {/* Drone List */}
             <DroneList />
         </div>
     );
