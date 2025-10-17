@@ -22,7 +22,7 @@ export const AppBar = () => {
 
                     <div className="flex items-center gap-3">
                         <img
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfnzilVul5rV0-eCSCuo3HGsFDZe4rJ_o-s9foSupTQXU_26atkMgK3_N5ZSqU9m8XYWDx74dvydjcaWRyvhu1ZlQ9xVc4a3I82wYMvZxlykZFwm53cv2zUq_luwNvOLSkT-TQw_ouVyjh4c6LaghXt2PX07mPXRtYsCaBlSb9bnzK0vRaWYSeFxcGymlM4ApLeUCFoBLYNRmpiLPiDgC6J1J69gu2PwU1nYYxUAbdipqmgfzNI8YO1lyMnsd07BXQDlSTkwvftxo"
+                            src="/fac-logo.png"
                             alt="FAC Logo"
                             className="h-10 w-10"
                         />

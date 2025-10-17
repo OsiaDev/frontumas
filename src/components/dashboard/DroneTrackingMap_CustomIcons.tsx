@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Polyline, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-leaflet';
 import { MapPin, Navigation } from 'lucide-react';
 import { useDrones } from '@store/drone/DroneContext';
 import { useTracking } from '@store/tracking/TrackingContext';
 import { DEFAULT_CITY, MAP_TILE_CONFIG, MAP_ZOOM_CONFIG } from '@config/map.config';
+import { createDroneIcon } from './DroneMarkerIcon';
 import 'leaflet/dist/leaflet.css';
 import type { LatLngExpression } from 'leaflet';
 
@@ -34,7 +35,11 @@ const MapCenterController = ({ selectedDroneId }: { selectedDroneId: string | nu
     return null;
 };
 
-export const DroneTrackingMap = () => {
+/**
+ * Versión del mapa con iconos personalizados que muestran
+ * la dirección del dron mediante una flecha
+ */
+export const DroneTrackingMapCustomIcons = () => {
     const { drones } = useDrones();
     const { selectedDroneId, selectDrone, getDroneHistory } = useTracking();
 
@@ -98,9 +103,6 @@ export const DroneTrackingMap = () => {
 
                         <MapCenterController selectedDroneId={selectedDroneId} />
 
-                        {/* Descomentar para mostrar coordenadas en tiempo real */}
-                        {/* <MapCoordinatesDisplay /> */}
-
                         {markers.map((marker) => {
                             const history = getDroneHistory(marker.vehicleId);
                             const position: LatLngExpression = [marker.latitude, marker.longitude];
@@ -110,6 +112,13 @@ export const DroneTrackingMap = () => {
                                 pos.latitude,
                                 pos.longitude,
                             ]);
+
+                            // Crear icono personalizado con dirección
+                            const icon = createDroneIcon({
+                                vehicleId: marker.vehicleId,
+                                heading: marker.heading,
+                                isSelected: marker.isSelected,
+                            });
 
                             return (
                                 <div key={marker.vehicleId}>
@@ -126,16 +135,10 @@ export const DroneTrackingMap = () => {
                                         />
                                     )}
 
-                                    {/* Marcador del dron */}
-                                    <CircleMarker
-                                        center={position}
-                                        radius={marker.isSelected ? 12 : 8}
-                                        pathOptions={{
-                                            fillColor: marker.isSelected ? '#3b82f6' : '#10b981',
-                                            fillOpacity: 1,
-                                            color: '#ffffff',
-                                            weight: 2,
-                                        }}
+                                    {/* Marcador del dron con icono personalizado */}
+                                    <Marker
+                                        position={position}
+                                        icon={icon}
                                         eventHandlers={{
                                             click: () => selectDrone(marker.vehicleId),
                                         }}
@@ -143,14 +146,17 @@ export const DroneTrackingMap = () => {
                                         <Popup>
                                             <div className="text-sm">
                                                 <p className="font-bold text-gray-900">
-                                                    {marker.vehicleId}
+                                                    Dron: {marker.vehicleId}
                                                 </p>
                                                 <p className="text-gray-600 text-xs mt-1">
+                                                    Heading: {marker.heading.toFixed(1)}°
+                                                </p>
+                                                <p className="text-gray-600 text-xs">
                                                     Click para ver detalles
                                                 </p>
                                             </div>
                                         </Popup>
-                                    </CircleMarker>
+                                    </Marker>
                                 </div>
                             );
                         })}

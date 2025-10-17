@@ -1,4 +1,5 @@
 import React from 'react';
+import 'leaflet/dist/leaflet.css';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import "@fontsource/nunito-sans/400.css"; // peso 400 por defecto

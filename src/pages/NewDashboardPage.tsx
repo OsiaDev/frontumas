@@ -17,16 +17,16 @@ export const NewDashboardPage = () => {
 
             <MqttStatus />
 
-            <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-0">
-                <div className="lg:col-span-2 h-[400px] lg:h-auto">
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-24 gap-4 min-h-0">
+                <div className="lg:col-span-3 h-[400px] lg:h-auto">
                     <DroneCompactList />
                 </div>
 
-                <div className="lg:col-span-7 h-[500px] lg:h-auto">
+                <div className="lg:col-span-17 h-[500px] lg:h-auto">
                     <DroneTrackingMap />
                 </div>
 
-                <div className="lg:col-span-3 h-[400px] lg:h-auto">
+                <div className="lg:col-span-4 h-[400px] lg:h-auto">
                     <DroneDetailsPanel />
                 </div>
             </div>

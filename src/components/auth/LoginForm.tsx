@@ -58,7 +58,7 @@ export const LoginForm = () => {
                         <img
                             alt="Fuerza Aeroespacial Colombiana Logo"
                             className="h-20 w-20 mb-4"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfnzilVul5rV0-eCSCuo3HGsFDZe4rJ_o-s9foSupTQXU_26atkMgK3_N5ZSqU9m8XYWDx74dvydjcaWRyvhu1ZlQ9xVc4a3I82wYMvZxlykZFwm53cv2zUq_luwNvOLSkT-TQw_ouVyjh4c6LaghXt2PX07mPXRtYsCaBlSb9bnzK0vRaWYSeFxcGymlM4ApLeUCFoBLYNRmpiLPiDgC6J1J69gu2PwU1nYYxUAbdipqmgfzNI8YO1lyMnsd07BXQDlSTkwvftxo"
+                            src="/fac-logo.png"
                         />
                         <h1 className="text-2xl font-bold text-center text-white">
                             Fuerza Aeroespacial Colombiana
