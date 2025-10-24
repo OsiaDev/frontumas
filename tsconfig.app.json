@@ -10,13 +10,24 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
+      "@features": ["./src/features"],
+      "@features/*": ["./src/features/*"],
+      "@core": ["./src/core"],
+      "@core/*": ["./src/core/*"],
+      "@shared": ["./src/shared"],
+      "@shared/*": ["./src/shared/*"],
+      "@store": ["./src/core/store"],
+      "@store/*": ["./src/core/store/*"],
+      "@router": ["./src/core/router"],
+      "@router/*": ["./src/core/router/*"],
+      "@config": ["./src/core/config"],
+      "@config/*": ["./src/core/config/*"],
       "@components/*": ["./src/components/*"],
       "@pages/*": ["./src/pages/*"],
-      "@hooks/*": ["./src/hooks/*"],
       "@services/*": ["./src/services/*"],
-      "@store/*": ["./src/store/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@config/*": ["./src/config/*"]
+      "@hooks/*": ["./src/hooks/*"],
+      "@utils/*": ["./src/shared/utils/*"],
+      "@types/*": ["./src/shared/types/*"]
     },
 
     /* Bundler mode */

@@ -3,7 +3,19 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@store": ["./src/store"],
+      "@store/*": ["./src/store/*"],
+      "@router": ["./src/router"],
+      "@router/*": ["./src/router/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@config/*": ["./src/config/*"],
+      "@components/*": ["./src/components/*"],
+      "@pages/*": ["./src/pages/*"],
+      "@services/*": ["./src/services/*"],
+      "@utils/*": ["./src/shared/utils/*"],
+      "@types/*": ["./src/shared/types/*"]
     }
   },
   "include": ["src"],

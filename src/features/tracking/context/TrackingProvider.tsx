@@ -1,0 +1,79 @@
+import { useState, useCallback, useEffect } from 'react';
+import type { ReactNode } from 'react';
+import type { DroneLocationMessage } from '@shared/types/drone.types';
+import { useDrones } from '@features/drones';
+import TrackingContext, { type TrackingContextType } from './TrackingContext';
+
+interface TrackingProviderProps {
+    children: ReactNode;
+}
+
+const MAX_HISTORY_SIZE = 30;
+
+export const TrackingProvider = ({ children }: TrackingProviderProps) => {
+    const [selectedDroneId, setSelectedDroneId] = useState<string | null>(null);
+    const [histories, setHistories] = useState<Map<string, DroneLocationMessage[]>>(new Map());
+    const { drones } = useDrones();
+
+    const selectDrone = useCallback((vehicleId: string | null) => {
+        setSelectedDroneId(vehicleId);
+    }, []);
+
+    const getDroneHistory = useCallback((vehicleId: string): DroneLocationMessage[] => {
+        return histories.get(vehicleId) || [];
+    }, [histories]);
+
+    const clearHistory = useCallback((vehicleId: string) => {
+        setHistories(prev => {
+            const newHistories = new Map(prev);
+            newHistories.delete(vehicleId);
+            return newHistories;
+        });
+    }, []);
+
+    const clearAllHistories = useCallback(() => {
+        setHistories(new Map());
+    }, []);
+
+    useEffect(() => {
+        Object.values(drones).forEach(drone => {
+            if (drone.isActive) {
+                setHistories(prev => {
+                    const newHistories = new Map(prev);
+                    const currentHistory = newHistories.get(drone.vehicleId) || [];
+
+                    const lastPosition = currentHistory[currentHistory.length - 1];
+                    const isDifferentPosition = !lastPosition ||
+                        lastPosition.latitude !== drone.lastLocation.latitude ||
+                        lastPosition.longitude !== drone.lastLocation.longitude;
+
+                    if (isDifferentPosition) {
+                        const updatedHistory = [...currentHistory, drone.lastLocation];
+
+                        if (updatedHistory.length > MAX_HISTORY_SIZE) {
+                            updatedHistory.shift();
+                        }
+
+                        newHistories.set(drone.vehicleId, updatedHistory);
+                    }
+
+                    return newHistories;
+                });
+            }
+        });
+    }, [drones]);
+
+    const value: TrackingContextType = {
+        selectedDroneId,
+        selectDrone,
+        getDroneHistory,
+        clearHistory,
+        clearAllHistories,
+    };
+
+    return (
+        <TrackingContext.Provider value={value}>
+            {children}
+        </TrackingContext.Provider>
+    );
+};
