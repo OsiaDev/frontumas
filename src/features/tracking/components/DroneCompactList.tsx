@@ -106,7 +106,14 @@ export const DroneCompactList = () => {
                 {drones.map((drone) => (
                     <button
                         key={drone.id}
-                        onClick={() => selectDrone(drone.vehicleId)}
+                        onClick={() => {
+                            // Toggle: si el dron ya está seleccionado, deseleccionarlo
+                            if (selectedDroneId === drone.vehicleId) {
+                                selectDrone(null);
+                            } else {
+                                selectDrone(drone.vehicleId);
+                            }
+                        }}
                         className={`w-full text-left p-2 rounded-lg transition-all ${
                             selectedDroneId === drone.vehicleId
                                 ? 'bg-primary text-white shadow-md'

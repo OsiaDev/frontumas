@@ -1,9 +1,9 @@
-import { Battery, Navigation, Gauge, Satellite, Clock, ThermometerSun } from 'lucide-react';
+import { Battery, Navigation, Gauge, Satellite, Clock, ThermometerSun, X } from 'lucide-react';
 import { useTracking } from '../context/TrackingContext';
 import { useDrones } from '@features/drones';
 
 export const DroneDetailsPanel = () => {
-    const { selectedDroneId } = useTracking();
+    const { selectedDroneId, selectDrone } = useTracking();
     const { getDrone } = useDrones();
 
     if (!selectedDroneId) {
@@ -102,12 +102,23 @@ export const DroneDetailsPanel = () => {
     return (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg h-full flex flex-col">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
-                    {drone.vehicleId}
-                </h3>
-                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                    <Clock className="w-3 h-3" />
-                    <span>{formatTimestamp(lastLocation.timestamp)}</span>
+                <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                            {drone.vehicleId}
+                        </h3>
+                        <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                            <Clock className="w-3 h-3" />
+                            <span>{formatTimestamp(lastLocation.timestamp)}</span>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => selectDrone(null)}
+                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                        title="Cerrar detalles"
+                    >
+                        <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    </button>
                 </div>
             </div>
 

@@ -4,7 +4,7 @@ import { MqttTopics } from '@shared/types/drone.types';
 
 // Configuración del broker MQTT
 export const MQTT_BROKER_CONFIG = {
-    url: import.meta.env.MQTT_BROKER_URL || 'ws://localhost:9001',
+    url: import.meta.env.MQTT_BROKER_URL || 'ws://127.0.0.1:9001',
     username: import.meta.env.MQTT_USERNAME || '',
     password: import.meta.env.MQTT_PASSWORD || '',
     clientId: import.meta.env.MQTT_CLIENT_ID || `umas-${Math.random().toString(16).slice(2, 10)}`,

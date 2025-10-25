@@ -137,7 +137,14 @@ export const DroneTrackingMap = () => {
                                             weight: 2,
                                         }}
                                         eventHandlers={{
-                                            click: () => selectDrone(marker.vehicleId),
+                                            click: () => {
+                                                // Toggle: si el dron ya está seleccionado, deseleccionarlo
+                                                if (selectedDroneId === marker.vehicleId) {
+                                                    selectDrone(null);
+                                                } else {
+                                                    selectDrone(marker.vehicleId);
+                                                }
+                                            },
                                         }}
                                     >
                                         <Popup>
