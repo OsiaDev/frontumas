@@ -11,13 +11,20 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './src'),
+            // Feature-First Architecture
+            '@features': path.resolve(__dirname, './src/features'),
+            '@core': path.resolve(__dirname, './src/core'),
+            '@shared': path.resolve(__dirname, './src/shared'),
+            // Aliases de compatibilidad temporal
+            '@store': path.resolve(__dirname, './src/core/store'),
+            '@router': path.resolve(__dirname, './src/core/router'),
+            '@config': path.resolve(__dirname, './src/core/config'),
             '@components': path.resolve(__dirname, './src/components'),
             '@pages': path.resolve(__dirname, './src/pages'),
-            '@hooks': path.resolve(__dirname, './src/hooks'),
             '@services': path.resolve(__dirname, './src/services'),
-            '@store': path.resolve(__dirname, './src/store'),
-            '@utils': path.resolve(__dirname, './src/utils'),
-            '@config': path.resolve(__dirname, './src/config'),
+            '@hooks': path.resolve(__dirname, './src/hooks'),
+            '@utils': path.resolve(__dirname, './src/shared/utils'),
+            '@types': path.resolve(__dirname, './src/shared/types'),
         },
     },
     build: {
