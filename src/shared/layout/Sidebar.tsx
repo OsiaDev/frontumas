@@ -1,7 +1,7 @@
 import { Home, Users, Settings, FileText, BarChart3, Plane } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import type { ComponentType } from 'react';
-import { useSidebar } from '@store';
+import { useSidebarStore } from '@core/store';
 
 interface NavItem {
     path: string;
@@ -19,7 +19,7 @@ const navItems: NavItem[] = [
 ];
 
 export const Sidebar = () => {
-    const { isExpanded } = useSidebar();
+    const isExpanded = useSidebarStore((state) => state.isExpanded);
 
     return (
         <aside

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useDrones } from '@features/drones';
+import { useDroneStore } from '@features/drones';
 import { useMqttConnection } from './useMqttConnection';
 import { mqttHandlers } from '../services/mqtt/mqtt.handlers';
 import type { DroneLocationMessage } from '@shared/types/drone.types';
@@ -13,7 +13,7 @@ interface UseDroneLocationsReturn {
 }
 
 export const useDroneLocations = (): UseDroneLocationsReturn => {
-    const { updateDroneLocation } = useDrones();
+    const updateDroneLocation = useDroneStore((state) => state.updateDroneLocation);
     const { status, error, connect } = useMqttConnection();
     const [lastMessage, setLastMessage] = useState<DroneLocationMessage | null>(null);
     const [messageCount, setMessageCount] = useState(0);

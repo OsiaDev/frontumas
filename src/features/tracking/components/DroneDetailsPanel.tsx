@@ -1,10 +1,11 @@
 import { Battery, Navigation, Gauge, Satellite, Clock, ThermometerSun, X } from 'lucide-react';
-import { useTracking } from '../context/TrackingContext';
-import { useDrones } from '@features/drones';
+import { useTrackingStore } from '../store/useTrackingStore';
+import { useDroneStore } from '@features/drones';
 
 export const DroneDetailsPanel = () => {
-    const { selectedDroneId, selectDrone } = useTracking();
-    const { getDrone } = useDrones();
+    const selectedDroneId = useTrackingStore((state) => state.selectedDroneId);
+    const selectDrone = useTrackingStore((state) => state.selectDrone);
+    const getDrone = useDroneStore((state) => state.getDrone);
 
     if (!selectedDroneId) {
         return (

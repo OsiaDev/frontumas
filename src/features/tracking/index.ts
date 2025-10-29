@@ -10,9 +10,12 @@ export { MapCoordinatesDisplay } from './components/MapCoordinatesDisplay';
 // Pages
 export { NewDashboardPage as DashboardPage } from './pages/DashboardPage';
 
-// Context & Hooks
+// Context & Hooks (deprecated - use store instead)
 export { useTracking } from './context/TrackingContext';
 export { TrackingProvider } from './context/TrackingProvider';
+
+// Store (Zustand with localStorage)
+export { useTrackingStore } from './store/useTrackingStore';
 
 // Hooks
 export { useMqttConnection } from './hooks/useMqttConnection';

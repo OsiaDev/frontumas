@@ -9,7 +9,12 @@ export const API_CONFIG = {
 
 export const API_ROUTES = {
     DRONES: {
-        LIST: '/v1/drones',
-        GET_BY_ID: (id: string) => `/v1/drones/${id}`,
+        LIST: '/api/v1/drones',
+        GET_BY_ID: (id: string) => `/api/v1/drones/${id}`,
+        CREATE: '/api/v1/drones',
+        UPDATE: (id: string) => `/api/v1/drones/${id}`,
+        UPDATE_STATUS: (id: string) => `/api/v1/drones/${id}/status`,
+        DELETE: (id: string) => `/api/v1/drones/${id}`,
+        STATUSES: '/api/v1/drones/statuses',
     },
 } as const;

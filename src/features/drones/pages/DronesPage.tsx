@@ -1,6 +1,6 @@
 import { MqttStatus } from '../components/MqttStatus';
 import { DroneStats } from '../components/DroneStats';
-import { DroneList } from '../components/DroneList';
+import { DroneTable } from '../components/DroneTable';
 
 export const DronesPage = () => {
     return (
@@ -10,15 +10,18 @@ export const DronesPage = () => {
                     Gestión de Drones
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400">
-                    Monitoreo en tiempo real - Fuerza Aeroespacial Colombiana
+                    Administración y monitoreo en tiempo real - Fuerza Aeroespacial Colombiana
                 </p>
             </div>
 
+            {/* Estado de conexión MQTT */}
             <MqttStatus />
 
+            {/* Estadísticas de drones */}
             <DroneStats />
 
-            <DroneList />
+            {/* Gestión de Drones - CRUD con monitoreo MQTT integrado */}
+            <DroneTable />
         </div>
     );
 };

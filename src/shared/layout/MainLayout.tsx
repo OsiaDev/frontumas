@@ -1,14 +1,14 @@
 import type { ReactNode } from 'react';
 import { AppBar } from './AppBar';
 import { Sidebar } from './Sidebar';
-import { useSidebar } from '@store';
+import { useSidebarStore } from '@core/store';
 
 interface MainLayoutProps {
     children: ReactNode;
 }
 
 export const MainLayout = ({ children }: MainLayoutProps) => {
-    const { isExpanded } = useSidebar();
+    const isExpanded = useSidebarStore((state) => state.isExpanded);
 
     return (
         <div className="min-h-screen bg-background-light dark:bg-background-dark">

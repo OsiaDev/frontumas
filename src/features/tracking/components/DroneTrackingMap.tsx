@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Polyline, Popup, useMap } from 'react-leaflet';
 import { MapPin, Navigation } from 'lucide-react';
-import { useDrones } from '@features/drones';
-import { useTracking } from '../context/TrackingContext';
+import { useDroneStore } from '@features/drones';
+import { useTrackingStore } from '../store/useTrackingStore';
 import { DEFAULT_CITY, MAP_TILE_CONFIG, MAP_ZOOM_CONFIG } from '@config/map.config';
 import 'leaflet/dist/leaflet.css';
 import type { LatLngExpression } from 'leaflet';
@@ -18,7 +18,7 @@ interface MapMarker {
 // Componente para centrar el mapa cuando se selecciona un dron
 const MapCenterController = ({ selectedDroneId }: { selectedDroneId: string | null }) => {
     const map = useMap();
-    const { drones } = useDrones();
+    const drones = useDroneStore((state) => state.drones);
 
     useEffect(() => {
         if (selectedDroneId && drones[selectedDroneId]) {
@@ -35,8 +35,10 @@ const MapCenterController = ({ selectedDroneId }: { selectedDroneId: string | nu
 };
 
 export const DroneTrackingMap = () => {
-    const { drones } = useDrones();
-    const { selectedDroneId, selectDrone, getDroneHistory } = useTracking();
+    const drones = useDroneStore((state) => state.drones);
+    const selectedDroneId = useTrackingStore((state) => state.selectedDroneId);
+    const selectDrone = useTrackingStore((state) => state.selectDrone);
+    const getDroneHistory = useTrackingStore((state) => state.getDroneHistory);
 
     const activeDrones = Object.values(drones).filter(d => d.isActive);
 

@@ -7,9 +7,12 @@ export { ProtectedRoute } from './components/ProtectedRoute';
 // Pages
 export { LoginPage } from './pages/LoginPage';
 
-// Context & Hooks
+// Context & Hooks (deprecated - use store instead)
 export { useAuth } from './context/AuthContext';
 export { AuthProvider } from './context/AuthProvider';
+
+// Store (Zustand with localStorage)
+export { useAuthStore, selectIsAuthenticated } from './store/useAuthStore';
 
 // Services
 export { authService } from './services/auth.service';

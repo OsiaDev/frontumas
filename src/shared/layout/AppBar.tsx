@@ -1,10 +1,10 @@
 import { Menu, LogOut, User } from 'lucide-react';
-import { useAuth } from '@features/auth';
-import { useSidebar } from '@core/store';
+import { useAuthStore, useSidebarStore } from '@core/store';
 
 export const AppBar = () => {
-    const { user, logout } = useAuth();
-    const { toggleSidebar } = useSidebar();
+    const user = useAuthStore((state) => state.user);
+    const logout = useAuthStore((state) => state.logout);
+    const toggleSidebar = useSidebarStore((state) => state.toggleSidebar);
 
     return (
         <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm fixed top-0 left-0 right-0 z-40">

@@ -1,12 +1,13 @@
 import { Plane, RefreshCw, AlertCircle } from 'lucide-react';
-import { useDronesApi, useDrones } from '@features/drones';
-import { useTracking } from '../context/TrackingContext';
+import { useDronesApi, useDroneStore } from '@features/drones';
+import { useTrackingStore } from '../store/useTrackingStore';
 import type { DroneStatus } from '@shared/types/api.types';
 
 export const DroneCompactList = () => {
     const { drones, loading, error, refetch } = useDronesApi();
-    const { selectedDroneId, selectDrone } = useTracking();
-    const { getDrone } = useDrones();
+    const selectedDroneId = useTrackingStore((state) => state.selectedDroneId);
+    const selectDrone = useTrackingStore((state) => state.selectDrone);
+    const getDrone = useDroneStore((state) => state.getDrone);
 
     const getStatusColor = (status: DroneStatus): string => {
         switch (status) {

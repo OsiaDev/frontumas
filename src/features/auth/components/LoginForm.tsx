@@ -1,14 +1,17 @@
 // src/components/auth/LoginForm.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuthStore } from '../store/useAuthStore';
 import { Input } from '@shared/components/Input';
 import { PasswordInput } from '@shared/components/PasswordInput';
 import { Button } from '@shared/components/Button';
 
 export const LoginForm = () => {
     const navigate = useNavigate();
-    const { login, error, clearError, isLoading } = useAuth();
+    const login = useAuthStore((state) => state.login);
+    const error = useAuthStore((state) => state.error);
+    const clearError = useAuthStore((state) => state.clearError);
+    const isLoading = useAuthStore((state) => state.isLoading);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [formError, setFormError] = useState('');

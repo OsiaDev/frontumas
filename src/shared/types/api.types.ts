@@ -1,6 +1,6 @@
 // Tipos para el API REST de drones
 
-export type DroneStatus = 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE' | 'OFFLINE';
+export type DroneStatus = 'ACTIVE' | 'IN_MAINTENANCE' | 'REPAIRING' | 'OUT_OF_SERVICE' | 'DECOMMISSIONED';
 
 export interface DroneResponseDTO {
     id: string;
@@ -9,8 +9,29 @@ export interface DroneResponseDTO {
     description: string;
     serialNumber: string;
     status: DroneStatus;
+    flightHours: number;
     createdAt: string;
     updatedAt: string;
+}
+
+export interface CreateDroneDTO {
+    vehicleId: string;
+    model: string;
+    description: string;
+    serialNumber: string;
+    flightHours: number;
+}
+
+export interface UpdateDroneDTO {
+    vehicleId?: string;
+    model?: string;
+    description?: string;
+    serialNumber?: string;
+    flightHours?: number;
+}
+
+export interface UpdateDroneStatusDTO {
+    status: DroneStatus;
 }
 
 export interface DronesListResponse {
