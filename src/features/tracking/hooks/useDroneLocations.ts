@@ -18,12 +18,13 @@ export const useDroneLocations = (): UseDroneLocationsReturn => {
     const [lastMessage, setLastMessage] = useState<DroneLocationMessage | null>(null);
     const [messageCount, setMessageCount] = useState(0);
 
-    // Conectar automáticamente al montar
+    // Conectar automáticamente al montar (solo una vez)
     useEffect(() => {
         connect().catch((err) => {
             console.error('Error al conectar MQTT:', err);
         });
-    }, [connect]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Solo ejecutar al montar el componente
 
     // Registrar callback para mensajes de ubicación
     useEffect(() => {

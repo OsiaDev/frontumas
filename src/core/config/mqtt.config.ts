@@ -16,7 +16,7 @@ export const MQTT_CLIENT_OPTIONS: IClientOptions = {
     username: MQTT_BROKER_CONFIG.username,
     password: MQTT_BROKER_CONFIG.password,
     clean: true,
-    reconnectPeriod: 5000,
+    reconnectPeriod: 10000, // Aumentado a 10 segundos para evitar sobrecarga de conexiones
     connectTimeout: 30000,
     keepalive: 60,
     protocolVersion: 4, // MQTT 3.1.1 (más compatible que v5)
@@ -24,6 +24,10 @@ export const MQTT_CLIENT_OPTIONS: IClientOptions = {
     resubscribe: true,
     // Ruta WebSocket (debe coincidir con la configuración del broker)
     path: '/mqtt',
+    // Limitar reintentos de reconexión
+    properties: {
+        // sessionExpiryInterval: 300, // 5 minutos
+    },
 };
 
 // Suscripciones iniciales (solo location por ahora)
