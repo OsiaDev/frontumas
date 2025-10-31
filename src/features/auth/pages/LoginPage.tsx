@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LoginForm } from '../components/LoginForm';
-import { useAuth } from '../context/AuthContext';
+import { useAuthStore, selectIsAuthenticated } from '../store/useAuthStore';
 
 export const LoginPage = () => {
     const navigate = useNavigate();
-    const { isAuthenticated } = useAuth();
+    const isAuthenticated = useAuthStore(selectIsAuthenticated);
 
     useEffect(() => {
         if (isAuthenticated) {

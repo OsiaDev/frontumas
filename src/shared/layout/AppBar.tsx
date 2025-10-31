@@ -1,10 +1,11 @@
 import { Menu, LogOut, User } from 'lucide-react';
-import { useAuth } from '@features/auth';
-import { useSidebar } from '@core/store';
+import { useAuthStore, useSidebarStore } from '@core/store';
+import { ThemeToggle } from '@shared/components/ThemeToggle';
 
 export const AppBar = () => {
-    const { user, logout } = useAuth();
-    const { toggleSidebar } = useSidebar();
+    const user = useAuthStore((state) => state.user);
+    const logout = useAuthStore((state) => state.logout);
+    const toggleSidebar = useSidebarStore((state) => state.toggleSidebar);
 
     return (
         <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm fixed top-0 left-0 right-0 z-40">
@@ -33,7 +34,7 @@ export const AppBar = () => {
                 </div>
 
                 {/* Right Section */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                     {/* User Info */}
                     <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700">
                         <User className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -41,6 +42,9 @@ export const AppBar = () => {
               {user?.username}
             </span>
                     </div>
+
+                    {/* Theme Toggle */}
+                    <ThemeToggle />
 
                     {/* Logout Button */}
                     <button

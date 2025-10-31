@@ -16,16 +16,16 @@ export const Button = ({
                            ...props
                        }: ButtonProps) => {
     const baseClasses = `
-        w-full font-semibold py-3.5 px-4 rounded-xl 
-        transition-all duration-300 
-        focus:outline-none focus:ring-2 focus:ring-offset-2 
+        w-full font-semibold py-2.5 px-4 rounded-lg text-sm
+        transition-all duration-300
+        focus:outline-none focus:ring-2 focus:ring-offset-2
         disabled:opacity-50 disabled:cursor-not-allowed
-        shadow-lg hover:shadow-xl
+        shadow-md hover:shadow-lg
     `;
 
     const variantClasses = {
         primary: 'bg-primary text-white hover:bg-primary-dark focus:ring-primary',
-        secondary: 'bg-gray-500 text-white hover:bg-gray-600 focus:ring-gray-500',
+        secondary: 'bg-gray-200 dark:bg-gray-500 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 focus:ring-gray-500',
         danger: 'bg-red-500 text-white hover:bg-red-600 focus:ring-red-500',
     };
 

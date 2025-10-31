@@ -1,37 +1,39 @@
 import type { ReactNode } from 'react';
-import { AuthProvider } from '@features/auth';
-import { DroneProvider } from '@features/drones';
-import { TrackingProvider } from '@features/tracking';
-import { SidebarProvider } from './SidebarProvider';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@config/query.config';
+import { ThemeInitializer } from './ThemeInitializer';
 
 interface AppProviderProps {
     children: ReactNode;
 }
 
 /**
- * AppProvider - Proveedor raíz que combina todos los contextos de features
+ * AppProvider - Proveedor raíz simplificado
  *
- * Arquitectura Feature-First:
- * - Cada feature (auth, drones, tracking) tiene su propio provider
- * - Los providers están organizados según sus dependencias
- * - SidebarProvider es parte del core (UI global)
+ * Arquitectura con Zustand:
+ * - El estado global ahora se maneja con Zustand stores
+ * - Cada store tiene persistencia automática en localStorage
+ * - No se necesitan providers anidados para el estado
  *
- * Orden de los providers:
- * 1. AuthProvider - Autenticación (independiente)
- * 2. DroneProvider - Estado de drones (independiente)
- * 3. TrackingProvider - Tracking de drones (depende de DroneProvider)
- * 4. SidebarProvider - Estado UI del sidebar (independiente, core)
+ * Stores disponibles:
+ * - useAuthStore: Autenticación y usuario
+ * - useDroneStore: Estado de drones y ubicaciones MQTT
+ * - useTrackingStore: Tracking y selección de drones
+ * - useSidebarStore: Estado UI del sidebar
+ * - useThemeStore: Tema de la aplicación (light/dark)
+ *
+ * Beneficios:
+ * - Menos jerarquía de componentes (sin provider hell)
+ * - Persistencia automática en localStorage
+ * - Mejor performance (solo se re-renderizan componentes que usan el estado)
+ * - TypeScript type-safe por defecto
+ * - DevTools integrados para debugging
  */
 export const AppProvider = ({ children }: AppProviderProps) => {
     return (
-        <AuthProvider>
-            <DroneProvider>
-                <TrackingProvider>
-                    <SidebarProvider>
-                        {children}
-                    </SidebarProvider>
-                </TrackingProvider>
-            </DroneProvider>
-        </AuthProvider>
+        <QueryClientProvider client={queryClient}>
+            <ThemeInitializer />
+            {children}
+        </QueryClientProvider>
     );
 };

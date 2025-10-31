@@ -4,10 +4,10 @@ import { MqttTopics } from '@shared/types/drone.types';
 
 // Configuración del broker MQTT
 export const MQTT_BROKER_CONFIG = {
-    url: import.meta.env.MQTT_BROKER_URL || 'ws://127.0.0.1:9001',
-    username: import.meta.env.MQTT_USERNAME || '',
-    password: import.meta.env.MQTT_PASSWORD || '',
-    clientId: import.meta.env.MQTT_CLIENT_ID || `umas-${Math.random().toString(16).slice(2, 10)}`,
+    url: import.meta.env.VITE_MQTT_BROKER_URL || 'ws://127.0.0.1:9001',
+    username: import.meta.env.VITE_MQTT_USERNAME || '',
+    password: import.meta.env.VITE_MQTT_PASSWORD || '',
+    clientId: import.meta.env.VITE_MQTT_CLIENT_ID || `umas-${Math.random().toString(16).slice(2, 10)}`,
 } as const;
 
 // Opciones del cliente MQTT
@@ -16,22 +16,17 @@ export const MQTT_CLIENT_OPTIONS: IClientOptions = {
     username: MQTT_BROKER_CONFIG.username,
     password: MQTT_BROKER_CONFIG.password,
     clean: true,
-    reconnectPeriod: 5000,
+    reconnectPeriod: 10000, // Aumentado a 10 segundos para evitar sobrecarga de conexiones
     connectTimeout: 30000,
     keepalive: 60,
-    protocolVersion: 5,
+    protocolVersion: 4, // MQTT 3.1.1 (más compatible que v5)
     // Opciones de reconexión automática
     resubscribe: true,
-    // Will message para notificar desconexión
-    will: {
-        topic: 'umas/status',
-        payload: JSON.stringify({
-            clientId: MQTT_BROKER_CONFIG.clientId,
-            status: 'offline',
-            timestamp: new Date().toISOString(),
-        }),
-        qos: 1,
-        retain: false,
+    // Ruta WebSocket (debe coincidir con la configuración del broker)
+    path: '/mqtt',
+    // Limitar reintentos de reconexión
+    properties: {
+        // sessionExpiryInterval: 300, // 5 minutos
     },
 };
 

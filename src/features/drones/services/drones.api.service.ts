@@ -1,4 +1,12 @@
-import type { DroneResponseDTO, DronesListResponse, ApiError } from '@shared/types/api.types';
+import type {
+    DroneResponseDTO,
+    DronesListResponse,
+    ApiError,
+    CreateDroneDTO,
+    UpdateDroneDTO,
+    UpdateDroneStatusDTO,
+    DroneStatus,
+} from '@shared/types/api.types';
 import { API_CONFIG, API_ROUTES } from '@config/api.config';
 
 class DronesApiService {
@@ -74,6 +82,81 @@ class DronesApiService {
             return this.handleResponse<DroneResponseDTO>(response);
         } catch (error) {
             console.error(`Error obteniendo dron ${id}:`, error);
+            throw error;
+        }
+    }
+
+    async createDrone(data: CreateDroneDTO): Promise<DroneResponseDTO> {
+        try {
+            const url = `${this.baseUrl}${API_ROUTES.DRONES.CREATE}`;
+            const response = await this.fetchWithTimeout(url, {
+                method: 'POST',
+                body: JSON.stringify(data),
+            });
+
+            return this.handleResponse<DroneResponseDTO>(response);
+        } catch (error) {
+            console.error('Error creando dron:', error);
+            throw error;
+        }
+    }
+
+    async updateDrone(id: string, data: UpdateDroneDTO): Promise<DroneResponseDTO> {
+        try {
+            const url = `${this.baseUrl}${API_ROUTES.DRONES.UPDATE(id)}`;
+            const response = await this.fetchWithTimeout(url, {
+                method: 'PUT',
+                body: JSON.stringify(data),
+            });
+
+            return this.handleResponse<DroneResponseDTO>(response);
+        } catch (error) {
+            console.error(`Error actualizando dron ${id}:`, error);
+            throw error;
+        }
+    }
+
+    async updateDroneStatus(id: string, status: DroneStatus): Promise<DroneResponseDTO> {
+        try {
+            const url = `${this.baseUrl}${API_ROUTES.DRONES.UPDATE_STATUS(id)}`;
+            const response = await this.fetchWithTimeout(url, {
+                method: 'PATCH',
+                body: JSON.stringify({ status }),
+            });
+
+            return this.handleResponse<DroneResponseDTO>(response);
+        } catch (error) {
+            console.error(`Error actualizando estado del dron ${id}:`, error);
+            throw error;
+        }
+    }
+
+    async deleteDrone(id: string): Promise<void> {
+        try {
+            const url = `${this.baseUrl}${API_ROUTES.DRONES.DELETE(id)}`;
+            const response = await this.fetchWithTimeout(url, {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+        } catch (error) {
+            console.error(`Error eliminando dron ${id}:`, error);
+            throw error;
+        }
+    }
+
+    async getDroneStatuses(): Promise<Array<{ code: string; description: string }>> {
+        try {
+            const url = `${this.baseUrl}${API_ROUTES.DRONES.STATUSES}`;
+            const response = await this.fetchWithTimeout(url, {
+                method: 'GET',
+            });
+
+            return this.handleResponse<Array<{ code: string; description: string }>>(response);
+        } catch (error) {
+            console.error('Error obteniendo estados de drones:', error);
             throw error;
         }
     }

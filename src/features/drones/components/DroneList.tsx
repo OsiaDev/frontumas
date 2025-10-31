@@ -1,8 +1,9 @@
 import { Plane, Battery, Signal } from 'lucide-react';
-import { useDrones } from '../context/DroneContext';
+import { useDroneStore } from '../store/useDroneStore';
 
 export const DroneList = () => {
-    const { getActiveDrones, getTotalDrones } = useDrones();
+    const getActiveDrones = useDroneStore((state) => state.getActiveDrones);
+    const getTotalDrones = useDroneStore((state) => state.getTotalDrones);
     const activeDrones = getActiveDrones();
     const totalDrones = getTotalDrones();
 
