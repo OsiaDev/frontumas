@@ -8,6 +8,7 @@ import { ROUTES } from './routes';
 const DashboardPage = lazy(() => import('@features/tracking').then(m => ({ default: m.DashboardPage })));
 const DronesPage = lazy(() => import('@features/drones').then(m => ({ default: m.DronesPage })));
 const GeofencesPage = lazy(() => import('@features/geofences').then(m => ({ default: m.GeofencesPage })));
+const RoutesPage = lazy(() => import('@features/routes').then(m => ({ default: m.RoutesPage })));
 
 // Componente de carga
 const LoadingFallback = () => (
@@ -77,17 +78,20 @@ export const AppRouter = () => {
                     }
                 />
 
-                {/* Rutas en construcción */}
                 <Route
                     path={ROUTES.ROUTES}
                     element={
                         <ProtectedRoute>
                             <MainLayout>
-                                <UnderConstruction title="Rutas" />
+                                <Suspense fallback={<LoadingFallback />}>
+                                    <RoutesPage />
+                                </Suspense>
                             </MainLayout>
                         </ProtectedRoute>
                     }
                 />
+
+                {/* Rutas en construcción */}
                 <Route
                     path={ROUTES.USERS}
                     element={

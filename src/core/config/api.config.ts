@@ -28,6 +28,13 @@ export const API_ROUTES = {
     },
     ROUTES: {
         LIST: '/api/v1/routes',
+        UPLOAD: '/api/v1/routes/upload',
         GET_BY_ID: (id: string) => `/api/v1/routes/${id}`,
+        GET_BY_NAME: (name: string) => `/api/v1/routes/by-name/${name}`,
+        CREATE: '/api/v1/routes',
+        UPDATE: (id: string) => `/api/v1/routes/${id}`,
+        ACTIVATE: (id: string) => `/api/v1/routes/${id}/activate`,
+        DEACTIVATE: (id: string) => `/api/v1/routes/${id}/deactivate`,
+        DELETE: (id: string) => `/api/v1/routes/${id}`,
     },
 } as const;
