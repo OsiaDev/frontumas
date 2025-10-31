@@ -5,6 +5,7 @@ export { AppProvider } from './AppProvider';
 
 // Zustand Stores (with localStorage persistence)
 export { useSidebarStore } from './useSidebarStore';
+export { useThemeStore } from './useThemeStore';
 
 // Re-export feature stores for convenience
 export { useAuthStore } from '@features/auth';

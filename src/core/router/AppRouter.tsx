@@ -7,6 +7,7 @@ import { ROUTES } from './routes';
 // Lazy load de páginas para code splitting
 const DashboardPage = lazy(() => import('@features/tracking').then(m => ({ default: m.DashboardPage })));
 const DronesPage = lazy(() => import('@features/drones').then(m => ({ default: m.DronesPage })));
+const GeofencesPage = lazy(() => import('@features/geofences').then(m => ({ default: m.GeofencesPage })));
 
 // Componente de carga
 const LoadingFallback = () => (
@@ -63,7 +64,30 @@ export const AppRouter = () => {
                     }
                 />
 
+                <Route
+                    path={ROUTES.GEOFENCES}
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <Suspense fallback={<LoadingFallback />}>
+                                    <GeofencesPage />
+                                </Suspense>
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
                 {/* Rutas en construcción */}
+                <Route
+                    path={ROUTES.ROUTES}
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <UnderConstruction title="Rutas" />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
                 <Route
                     path={ROUTES.USERS}
                     element={

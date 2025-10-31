@@ -1,30 +1,36 @@
+import { useState } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@shared/components/Button';
-import { useDeleteDrone } from '../hooks/useDrones';
-import type { DroneResponseDTO } from '@shared/types/api.types';
+import { geofencesApiService } from '../services/geofences.api.service';
+import type { Geofence } from '@shared/types/geofence.types';
 
-interface DroneDeleteConfirmProps {
+interface GeofenceDeleteConfirmProps {
     isOpen: boolean;
     onClose: () => void;
-    drone: DroneResponseDTO;
+    geofence: Geofence;
+    refetch: () => void;
 }
 
-export const DroneDeleteConfirm = ({ isOpen, onClose, drone }: DroneDeleteConfirmProps) => {
-    const deleteDrone = useDeleteDrone();
+export const GeofenceDeleteConfirm = ({ isOpen, onClose, geofence, refetch }: GeofenceDeleteConfirmProps) => {
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const handleDelete = async () => {
+        setIsDeleting(true);
         try {
-            await deleteDrone.mutateAsync(drone.id);
-            toast.success('Drone eliminado exitosamente', {
-                description: `El drone ${drone.vehicleId} ha sido dado de baja del sistema.`,
+            await geofencesApiService.deleteGeofence(geofence.id);
+            toast.success('Geocerca eliminada', {
+                description: `La geocerca "${geofence.name}" ha sido eliminada correctamente.`,
             });
+            refetch();
             onClose();
         } catch (error) {
-            console.error('Error deleting drone:', error);
-            toast.error('Error al eliminar el drone', {
-                description: 'No se pudo eliminar el drone. Por favor intenta nuevamente.',
+            console.error('Error deleting geofence:', error);
+            toast.error('Error al eliminar la geocerca', {
+                description: 'No se pudo eliminar la geocerca. Por favor intenta nuevamente.',
             });
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -46,7 +52,7 @@ export const DroneDeleteConfirm = ({ isOpen, onClose, drone }: DroneDeleteConfir
                         <div className="p-2 bg-red-500/20 rounded-full">
                             <AlertTriangle size={20} className="text-red-500 dark:text-red-400" />
                         </div>
-                        <h2 className="text-lg font-bold text-gray-900 dark:text-white">Eliminar Drone</h2>
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-white">Eliminar Geocerca</h2>
                     </div>
                     <button
                         onClick={onClose}
@@ -59,20 +65,20 @@ export const DroneDeleteConfirm = ({ isOpen, onClose, drone }: DroneDeleteConfir
                 {/* Content */}
                 <div className="mb-4 space-y-3">
                     <p className="text-sm text-gray-700 dark:text-gray-300">
-                        ¿Estás seguro que deseas eliminar el siguiente drone?
+                        ¿Estás seguro que deseas eliminar la siguiente geocerca?
                     </p>
                     <div className="bg-gray-100 dark:bg-black/30 border border-gray-300 dark:border-[#004599]/30 rounded-lg p-3 space-y-2">
                         <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">Nombre:</span>
+                            <span className="text-gray-900 dark:text-white font-medium">{geofence.name}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">Archivo:</span>
+                            <span className="text-gray-900 dark:text-white font-medium">{geofence.originalFilename}</span>
+                        </div>
+                        <div className="flex justify-between">
                             <span className="text-gray-600 dark:text-gray-400">ID:</span>
-                            <span className="text-gray-900 dark:text-white font-medium">{drone.vehicleId}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Modelo:</span>
-                            <span className="text-gray-900 dark:text-white font-medium">{drone.model}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Serie:</span>
-                            <span className="text-gray-900 dark:text-white font-medium">{drone.serialNumber}</span>
+                            <span className="text-gray-900 dark:text-white font-medium text-xs">{geofence.id.substring(0, 16)}...</span>
                         </div>
                     </div>
                     <p className="text-red-600 dark:text-red-400 text-sm">
@@ -86,7 +92,7 @@ export const DroneDeleteConfirm = ({ isOpen, onClose, drone }: DroneDeleteConfir
                         type="button"
                         variant="secondary"
                         onClick={onClose}
-                        disabled={deleteDrone.isPending}
+                        disabled={isDeleting}
                     >
                         Cancelar
                     </Button>
@@ -94,21 +100,12 @@ export const DroneDeleteConfirm = ({ isOpen, onClose, drone }: DroneDeleteConfir
                         type="button"
                         variant="danger"
                         onClick={handleDelete}
-                        isLoading={deleteDrone.isPending}
-                        disabled={deleteDrone.isPending}
+                        disabled={isDeleting}
+                        isLoading={isDeleting}
                     >
-                        Eliminar
+                        {isDeleting ? 'Eliminando...' : 'Eliminar'}
                     </Button>
                 </div>
-
-                {/* Error Display */}
-                {deleteDrone.isError && (
-                    <div className="mt-4 p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg">
-                        <p className="text-red-600 dark:text-red-400 text-sm">
-                            Error al eliminar el drone. Por favor intenta nuevamente.
-                        </p>
-                    </div>
-                )}
             </div>
         </div>
     );

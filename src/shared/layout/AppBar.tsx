@@ -1,5 +1,6 @@
 import { Menu, LogOut, User } from 'lucide-react';
 import { useAuthStore, useSidebarStore } from '@core/store';
+import { ThemeToggle } from '@shared/components/ThemeToggle';
 
 export const AppBar = () => {
     const user = useAuthStore((state) => state.user);
@@ -33,7 +34,7 @@ export const AppBar = () => {
                 </div>
 
                 {/* Right Section */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                     {/* User Info */}
                     <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700">
                         <User className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -41,6 +42,9 @@ export const AppBar = () => {
               {user?.username}
             </span>
                     </div>
+
+                    {/* Theme Toggle */}
+                    <ThemeToggle />
 
                     {/* Logout Button */}
                     <button

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@config/query.config';
+import { ThemeInitializer } from './ThemeInitializer';
 
 interface AppProviderProps {
     children: ReactNode;
@@ -19,6 +20,7 @@ interface AppProviderProps {
  * - useDroneStore: Estado de drones y ubicaciones MQTT
  * - useTrackingStore: Tracking y selección de drones
  * - useSidebarStore: Estado UI del sidebar
+ * - useThemeStore: Tema de la aplicación (light/dark)
  *
  * Beneficios:
  * - Menos jerarquía de componentes (sin provider hell)
@@ -30,6 +32,7 @@ interface AppProviderProps {
 export const AppProvider = ({ children }: AppProviderProps) => {
     return (
         <QueryClientProvider client={queryClient}>
+            <ThemeInitializer />
             {children}
         </QueryClientProvider>
     );

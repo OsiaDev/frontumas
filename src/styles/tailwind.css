@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@config "./tailwind.config.js";
+
 @theme {
     /* Colores personalizados */
     --color-primary: #004599;

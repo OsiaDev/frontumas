@@ -110,12 +110,12 @@ export const DroneForm = ({ initialData, onSubmit, onCancel, isLoading = false, 
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
             {/* Información Básica */}
-            <div className="space-y-4">
-                <div className="flex items-center gap-2 pb-2 border-b border-[#004599]/30">
-                    <Package size={18} className="text-[#FFD100]" />
-                    <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
+            <div className="space-y-3">
+                <div className="flex items-center gap-2 pb-2 border-b border-gray-300 dark:border-[#004599]/30">
+                    <Package size={16} className="text-primary" />
+                    <h3 className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">
                         Información Básica
                     </h3>
                 </div>
@@ -155,10 +155,10 @@ export const DroneForm = ({ initialData, onSubmit, onCancel, isLoading = false, 
             </div>
 
             {/* Detalles Técnicos */}
-            <div className="space-y-4">
-                <div className="flex items-center gap-2 pb-2 border-b border-[#004599]/30">
-                    <Barcode size={18} className="text-[#FFD100]" />
-                    <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
+            <div className="space-y-3">
+                <div className="flex items-center gap-2 pb-2 border-b border-gray-300 dark:border-[#004599]/30">
+                    <Barcode size={16} className="text-primary" />
+                    <h3 className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">
                         Detalles Técnicos
                     </h3>
                 </div>
@@ -189,7 +189,7 @@ export const DroneForm = ({ initialData, onSubmit, onCancel, isLoading = false, 
                 />
             </div>
 
-            <div className="flex gap-3 pt-6 border-t border-[#004599]/30">
+            <div className="flex gap-3 pt-4 border-t border-gray-300 dark:border-[#004599]/30">
                 <Button
                     type="button"
                     variant="secondary"

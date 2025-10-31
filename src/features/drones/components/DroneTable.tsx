@@ -66,7 +66,7 @@ export const DroneTable = () => {
 
     if (isLoading) {
         return (
-            <div className="bg-[#0A1628] rounded-xl p-6 shadow-lg border border-[#004599]/30">
+            <div className="bg-white dark:bg-[#0A1628] rounded-xl p-6 shadow-lg border border-gray-200 dark:border-[#004599]/30">
                 <div className="flex items-center justify-center py-12">
                     <Loader2 className="w-8 h-8 text-primary animate-spin" />
                 </div>
@@ -76,18 +76,18 @@ export const DroneTable = () => {
 
     if (isError) {
         return (
-            <div className="bg-[#0A1628] rounded-xl p-6 shadow-lg border border-red-500/30">
+            <div className="bg-white dark:bg-[#0A1628] rounded-xl p-6 shadow-lg border border-red-300 dark:border-red-500/30">
                 <div className="flex items-center gap-3 mb-4">
-                    <Plane className="w-6 h-6 text-red-400" />
-                    <h3 className="text-xl font-bold text-white">
+                    <Plane className="w-6 h-6 text-red-500 dark:text-red-400" />
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                         Gestión de Drones
                     </h3>
                 </div>
                 <div className="text-center py-8">
-                    <p className="text-red-400">
+                    <p className="text-red-600 dark:text-red-400">
                         Error al cargar los drones
                     </p>
-                    <p className="text-sm text-gray-400 mt-2">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                         {error?.message || 'Intenta nuevamente más tarde'}
                     </p>
                 </div>
@@ -97,11 +97,11 @@ export const DroneTable = () => {
 
     return (
         <>
-            <div className="bg-[#0A1628] rounded-xl p-6 shadow-lg border border-[#004599]/30">
+            <div className="bg-white dark:bg-[#0A1628] rounded-xl p-6 shadow-lg border border-gray-200 dark:border-[#004599]/30">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                         <Plane className="w-6 h-6 text-primary" />
-                        <h3 className="text-xl font-bold text-white">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                             Gestión de Drones
                         </h3>
                         <div className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
@@ -119,10 +119,10 @@ export const DroneTable = () => {
 
                 {!drones || drones.length === 0 ? (
                     <div className="text-center py-12">
-                        <p className="text-gray-400">
+                        <p className="text-gray-600 dark:text-gray-400">
                             No hay drones registrados
                         </p>
-                        <p className="text-sm text-gray-500 mt-2">
+                        <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
                             Crea tu primer drone para comenzar
                         </p>
                     </div>
@@ -130,23 +130,23 @@ export const DroneTable = () => {
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead>
-                                <tr className="border-b border-[#004599]/30">
-                                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-400">
+                                <tr className="border-b border-gray-200 dark:border-[#004599]/30">
+                                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">
                                         ID Vehículo
                                     </th>
-                                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-400">
+                                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">
                                         Modelo
                                     </th>
-                                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-400">
+                                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">
                                         Número de Serie
                                     </th>
-                                    <th className="text-center py-3 px-4 text-sm font-semibold text-gray-400">
+                                    <th className="text-center py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">
                                         Conexión MQTT
                                     </th>
-                                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-400">
+                                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">
                                         Estado
                                     </th>
-                                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-400">
+                                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">
                                         Acciones
                                     </th>
                                 </tr>
@@ -159,15 +159,15 @@ export const DroneTable = () => {
                                     return (
                                         <tr
                                             key={drone.id}
-                                            className="border-b border-[#004599]/10 hover:bg-[#004599]/5 transition-colors"
+                                            className="border-b border-gray-100 dark:border-[#004599]/10 hover:bg-gray-50 dark:hover:bg-[#004599]/5 transition-colors"
                                         >
                                             <td className="py-3 px-4">
                                                 <div className="flex flex-col">
-                                                    <span className="text-sm text-white font-medium">
+                                                    <span className="text-sm text-gray-900 dark:text-white font-medium">
                                                         {drone.vehicleId}
                                                     </span>
                                                     {telemetry && (
-                                                        <span className="text-xs text-gray-400 mt-0.5">
+                                                        <span className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                                                             Bat: {telemetry.lastLocation.batteryLevel}% |
                                                             Alt: {telemetry.lastLocation.altitude.toFixed(0)}m
                                                         </span>
@@ -176,13 +176,13 @@ export const DroneTable = () => {
                                             </td>
                                             <td className="py-3 px-4">
                                                 <div className="flex flex-col">
-                                                    <span className="text-sm text-gray-300">{drone.model}</span>
-                                                    <span className="text-xs text-gray-500">
+                                                    <span className="text-sm text-gray-700 dark:text-gray-300">{drone.model}</span>
+                                                    <span className="text-xs text-gray-500 dark:text-gray-500">
                                                         {drone.description} | {drone.flightHours.toFixed(2)}h vuelo
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="py-3 px-4 text-sm text-gray-300">
+                                            <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
                                                 {drone.serialNumber}
                                             </td>
                                             <td className="py-3 px-4">
@@ -211,14 +211,14 @@ export const DroneTable = () => {
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button
                                                         onClick={() => handleEdit(drone)}
-                                                        className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                                        className="p-2 text-gray-500 dark:text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
                                                         title="Editar"
                                                     >
                                                         <Edit size={18} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDelete(drone)}
-                                                        className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                        className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                                                         title="Eliminar"
                                                     >
                                                         <Trash2 size={18} />

@@ -4,7 +4,7 @@ import { DroneTable } from '../components/DroneTable';
 
 export const DronesPage = () => {
     return (
-        <div className="space-y-6">
+        <div className="p-6 space-y-6">
             <div>
                 <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                     Gestión de Drones

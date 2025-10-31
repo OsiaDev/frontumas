@@ -3,9 +3,11 @@ import { MapContainer, TileLayer, CircleMarker, Polyline, Popup, useMap } from '
 import { MapPin, Navigation } from 'lucide-react';
 import { useDroneStore } from '@features/drones';
 import { useTrackingStore } from '../store/useTrackingStore';
+import { GeofenceLayer } from './GeofenceLayer';
 import { DEFAULT_CITY, MAP_TILE_CONFIG, MAP_ZOOM_CONFIG } from '@config/map.config';
 import 'leaflet/dist/leaflet.css';
 import type { LatLngExpression } from 'leaflet';
+import type { Geofence, GeofenceType } from '@shared/types/geofence.types';
 
 interface MapMarker {
     vehicleId: string;
@@ -15,11 +17,17 @@ interface MapMarker {
     isSelected: boolean;
 }
 
-// Componente para centrar el mapa cuando se selecciona un dron
-const MapCenterController = ({ selectedDroneId }: { selectedDroneId: string | null }) => {
+// Componente para centrar el mapa cuando se selecciona un dron o geocerca
+interface MapCenterControllerProps {
+    selectedDroneId: string | null;
+    centerTarget: { lat: number; lng: number; zoom?: number } | null;
+}
+
+const MapCenterController = ({ selectedDroneId, centerTarget }: MapCenterControllerProps) => {
     const map = useMap();
     const drones = useDroneStore((state) => state.drones);
 
+    // Centrar en dron seleccionado
     useEffect(() => {
         if (selectedDroneId && drones[selectedDroneId]) {
             const drone = drones[selectedDroneId];
@@ -31,10 +39,28 @@ const MapCenterController = ({ selectedDroneId }: { selectedDroneId: string | nu
         }
     }, [selectedDroneId, drones, map]);
 
+    // Centrar en geocerca
+    useEffect(() => {
+        if (centerTarget) {
+            map.flyTo(
+                [centerTarget.lat, centerTarget.lng],
+                centerTarget.zoom || 14,
+                { duration: 1 }
+            );
+        }
+    }, [centerTarget, map]);
+
     return null;
 };
 
-export const DroneTrackingMap = () => {
+interface DroneTrackingMapProps {
+    geofences: Geofence[];
+    geofenceTypes: GeofenceType[];
+    visibleGeofences: Set<string>;
+    centerTarget: { lat: number; lng: number; zoom?: number } | null;
+}
+
+export const DroneTrackingMap = ({ geofences, geofenceTypes, visibleGeofences, centerTarget }: DroneTrackingMapProps) => {
     const drones = useDroneStore((state) => state.drones);
     const selectedDroneId = useTrackingStore((state) => state.selectedDroneId);
     const selectDrone = useTrackingStore((state) => state.selectDrone);
@@ -56,7 +82,7 @@ export const DroneTrackingMap = () => {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg h-full flex flex-col">
             {/* Header */}
             <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                     <MapPin className="w-4 h-4 text-primary" />
                     <h3 className="text-sm font-bold text-gray-900 dark:text-white">
                         Mapa de Seguimiento
@@ -64,6 +90,11 @@ export const DroneTrackingMap = () => {
                     {activeDrones.length > 0 && (
                         <span className="text-xs text-gray-500 dark:text-gray-400">
                             {activeDrones.length} drones activos
+                        </span>
+                    )}
+                    {visibleGeofences.size > 0 && (
+                        <span className="text-xs text-amber-600 dark:text-amber-400">
+                            • {visibleGeofences.size} geocerca{visibleGeofences.size !== 1 ? 's' : ''}
                         </span>
                     )}
                 </div>
@@ -98,7 +129,10 @@ export const DroneTrackingMap = () => {
                             maxZoom={MAP_TILE_CONFIG.maxZoom}
                         />
 
-                        <MapCenterController selectedDroneId={selectedDroneId} />
+                        <MapCenterController selectedDroneId={selectedDroneId} centerTarget={centerTarget} />
+
+                        {/* Geocercas */}
+                        <GeofenceLayer geofences={geofences} geofenceTypes={geofenceTypes} visibleGeofences={visibleGeofences} />
 
                         {/* Descomentar para mostrar coordenadas en tiempo real */}
                         {/* <MapCoordinatesDisplay /> */}
@@ -167,16 +201,26 @@ export const DroneTrackingMap = () => {
                 )}
 
                 {/* Leyenda */}
-                {markers.length > 0 && (
+                {(markers.length > 0 || visibleGeofences.size > 0) && (
                     <div className="absolute bottom-4 left-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 text-xs z-[1000]">
-                        <div className="flex items-center gap-2 mb-1">
-                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                            <span className="text-gray-700 dark:text-gray-300">Activo</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                            <span className="text-gray-700 dark:text-gray-300">Seleccionado</span>
-                        </div>
+                        {markers.length > 0 && (
+                            <>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                                    <span className="text-gray-700 dark:text-gray-300">Activo</span>
+                                </div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                    <span className="text-gray-700 dark:text-gray-300">Seleccionado</span>
+                                </div>
+                            </>
+                        )}
+                        {visibleGeofences.size > 0 && (
+                            <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 border-2 border-amber-500 bg-amber-500/20"></div>
+                                <span className="text-gray-700 dark:text-gray-300">Geocerca</span>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

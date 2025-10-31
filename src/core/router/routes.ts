@@ -9,6 +9,8 @@ export const ROUTES = {
     // Rutas protegidas
     DASHBOARD: '/dashboard',
     DRONES: '/drones',
+    GEOFENCES: '/geofences',
+    ROUTES: '/routes',
     USERS: '/users',
     REPORTS: '/reports',
     ANALYTICS: '/analytics',

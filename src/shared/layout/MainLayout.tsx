@@ -17,13 +17,11 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
 
             <main
                 className={`
-          pt-16 transition-all duration-300
+          pt-16 h-screen transition-all duration-300 overflow-y-auto
           ${isExpanded ? 'ml-64' : 'ml-20'}
         `}
             >
-                <div className="p-6">
-                    {children}
-                </div>
+                {children}
             </main>
         </div>
     );

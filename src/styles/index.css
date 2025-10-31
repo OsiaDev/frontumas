@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Configuración de variante dark para Tailwind v4 */
+@variant dark (.dark &);
+
 @theme {
     /* Colores personalizados FAC */
     --color-primary: #004599;

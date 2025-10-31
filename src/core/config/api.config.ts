@@ -17,4 +17,17 @@ export const API_ROUTES = {
         DELETE: (id: string) => `/api/v1/drones/${id}`,
         STATUSES: '/api/v1/drones/statuses',
     },
+    GEOFENCES: {
+        LIST: '/api/v1/geofences',
+        UPLOAD: '/api/v1/geofences/upload',
+        GET_BY_ID: (id: string) => `/api/v1/geofences/${id}`,
+    },
+    GEOFENCE_TYPES: {
+        LIST: '/api/v1/geofence-types',
+        GET_BY_ID: (id: string) => `/api/v1/geofence-types/${id}`,
+    },
+    ROUTES: {
+        LIST: '/api/v1/routes',
+        GET_BY_ID: (id: string) => `/api/v1/routes/${id}`,
+    },
 } as const;

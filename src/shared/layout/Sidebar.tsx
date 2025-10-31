@@ -1,4 +1,4 @@
-import { Home, Users, Settings, FileText, BarChart3, Plane } from 'lucide-react';
+import { Home, Users, Settings, FileText, BarChart3, Plane, Route, SquareDashed } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import type { ComponentType } from 'react';
 import { useSidebarStore } from '@core/store';
@@ -12,6 +12,8 @@ interface NavItem {
 const navItems: NavItem[] = [
     { path: '/dashboard', label: 'Dashboard', icon: Home },
     { path: '/drones', label: 'Drones', icon: Plane },
+    { path: '/routes', label: 'Rutas', icon: Route },
+    { path: '/geofences', label: 'Geocercas', icon: SquareDashed },
     { path: '/users', label: 'Usuarios', icon: Users },
     { path: '/reports', label: 'Reportes', icon: FileText },
     { path: '/analytics', label: 'Analítica', icon: BarChart3 },
