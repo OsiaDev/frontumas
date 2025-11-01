@@ -8,7 +8,7 @@ export const DroneCompactList = () => {
     const { drones, loading, error, refetch } = useDronesApi();
     const selectedDroneId = useTrackingStore((state) => state.selectedDroneId);
     const selectDrone = useTrackingStore((state) => state.selectDrone);
-    const getDrone = useDroneStore((state) => state.getDrone);
+    const mqttDrones = useDroneStore((state) => state.drones);
     const [searchTerm, setSearchTerm] = useState('');
 
     const getStatusColor = (status: DroneStatus): string => {
@@ -42,8 +42,13 @@ export const DroneCompactList = () => {
     };
 
     const isConnected = (vehicleId: string): boolean => {
-        const mqttDrone = getDrone(vehicleId);
+        const mqttDrone = mqttDrones[vehicleId];
         return mqttDrone?.connectionStatus === 'CONNECTED';
+    };
+
+    const getBatteryLevel = (vehicleId: string): number | null => {
+        const mqttDrone = mqttDrones[vehicleId];
+        return mqttDrone?.lastLocation?.batteryLevel ?? null;
     };
 
     const filteredDrones = drones.filter(drone => {
@@ -155,16 +160,23 @@ export const DroneCompactList = () => {
                                 <div className="flex items-center justify-between gap-2">
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-1.5">
-                                            <span className="dark:text-white text-xs font-semibold truncate">
+                                            <span className={`text-xs font-semibold truncate ${selectedDroneId === drone.vehicleId ? 'text-white' : 'dark:text-white'}`}>
                                                 {drone.vehicleId}
                                             </span>
                                             {isConnected(drone.vehicleId) && (
                                                 <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
                                             )}
                                         </div>
-                                        <p className="dark:text-gray-400  text-[10px] opacity-80 truncate">
+                                        <p className={`text-[10px] opacity-80 truncate ${selectedDroneId === drone.vehicleId ? 'text-white' : 'dark:text-gray-400'}`}>
                                             {drone.model}
                                         </p>
+                                        {getBatteryLevel(drone.vehicleId) !== null && (
+                                            <div className="flex items-center gap-1 mt-0.5">
+                                                <span className={`text-[9px] font-medium ${selectedDroneId === drone.vehicleId ? 'text-white' : 'dark:text-gray-400'}`}>
+                                                    🔋 {getBatteryLevel(drone.vehicleId)}%
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                     <div
                                         className={`w-2 h-2 rounded-full ${getStatusColor(drone.status)}`}
