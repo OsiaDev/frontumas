@@ -24,6 +24,7 @@ export const useDroneStore = create<DroneStoreState>()(
 
             // Acciones
             updateDroneLocation: (message: DroneLocationMessage) => {
+                console.log('[DroneStore] Updating drone location:', message.vehicleId, 'battery:', message.batteryLevel);
                 set((state) => {
                     const updatedDrone: DroneState = {
                         vehicleId: message.vehicleId,
@@ -33,12 +34,15 @@ export const useDroneStore = create<DroneStoreState>()(
                         connectionStatus: 'CONNECTED',
                     };
 
-                    return {
+                    const newState = {
                         drones: {
                             ...state.drones,
                             [message.vehicleId]: updatedDrone,
                         },
                     };
+
+                    console.log('[DroneStore] New state:', newState.drones[message.vehicleId]);
+                    return newState;
                 });
             },
 
