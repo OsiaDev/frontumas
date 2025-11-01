@@ -1,10 +1,25 @@
-import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
+import { useEffect } from 'react';
 import { useDroneStore } from '@features/drones';
 import { MapPin, Navigation } from 'lucide-react';
 import { DEFAULT_CITY, MAP_TILE_CONFIG, MAP_ZOOM_CONFIG } from '@config/map.config';
 import { MissionTelemetry } from './MissionTelemetry';
 import 'leaflet/dist/leaflet.css';
 import type { LatLngExpression } from 'leaflet';
+
+interface MapCenterUpdaterProps {
+    center: LatLngExpression;
+}
+
+const MapCenterUpdater = ({ center }: MapCenterUpdaterProps) => {
+    const map = useMap();
+
+    useEffect(() => {
+        map.setView(center, map.getZoom());
+    }, [center, map]);
+
+    return null;
+};
 
 export const MissionDroneMap = () => {
     const drones = useDroneStore((state) => state.drones);
@@ -52,6 +67,7 @@ export const MissionDroneMap = () => {
                         className="w-full h-full"
                         zoomControl={true}
                     >
+                        <MapCenterUpdater center={defaultCenter} />
                         <TileLayer
                             url={MAP_TILE_CONFIG.url}
                             attribution={MAP_TILE_CONFIG.attribution}
