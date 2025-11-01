@@ -27,7 +27,6 @@ export interface UpdateDroneDTO {
     model?: string;
     description?: string;
     serialNumber?: string;
-    flightHours?: number;
 }
 
 export interface UpdateDroneStatusDTO {
