@@ -12,6 +12,7 @@ export const ROUTES = {
     GEOFENCES: '/geofences',
     ROUTES: '/routes',
     MISSION: '/mission',
+    OPERATORS: '/operators',
     USERS: '/users',
     REPORTS: '/reports',
     ANALYTICS: '/analytics',

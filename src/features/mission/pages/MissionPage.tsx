@@ -40,7 +40,7 @@ export const MissionPage = () => {
                 {/* Left - Live Video (2/3 width) */}
                 <div className="xl:col-span-2 min-h-0">
                     <LiveVideoPlayer
-                        videoUrl="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                        videoUrl="https://www.youtube.com/embed/hXD8itTKdY0"
                         title="Transmisión de Video en Vivo"
                     />
                 </div>

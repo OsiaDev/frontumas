@@ -7,7 +7,7 @@ interface LiveVideoPlayerProps {
 }
 
 export const LiveVideoPlayer = ({
-    videoUrl = 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl = 'https://www.youtube.com/embed/hXD8itTKdY0',
     title = 'Video en Vivo'
 }: LiveVideoPlayerProps) => {
     const [isMuted, setIsMuted] = useState(false);

@@ -1,20 +1,10 @@
-// Configuración de Keycloak para futura integración
+import Keycloak from 'keycloak-js';
 
-interface KeycloakConfig {
-    url: string;
-    realm: string;
-    clientId: string;
-}
+// Configuración de Keycloak
+const keycloak = new Keycloak({
+    url: 'https://192.168.246.10',
+    realm: 'umas',
+    clientId: 'commander'
+});
 
-export const keycloakConfig: KeycloakConfig = {
-    url: import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8080/auth',
-    realm: import.meta.env.VITE_KEYCLOAK_REALM || 'umas',
-    clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'umas-frontend',
-};
-
-// Función para inicializar Keycloak (implementar cuando se integre)
-export const initKeycloak = async () => {
-    // TODO: Implementar inicialización de Keycloak
-    console.log('Keycloak config:', keycloakConfig);
-    return Promise.resolve();
-};
+export default keycloak;

@@ -15,7 +15,7 @@ const DroneListItem = ({ drone, isSelected, onSelect }: DroneListItemProps) => {
     // Suscripción individual a este dron específico en el store MQTT
     const mqttDrone = useDroneStore((state) => state.drones[drone.vehicleId]);
 
-    console.log('[DroneListItem] Rendering:', drone.vehicleId, 'battery:', mqttDrone?.lastLocation?.batteryLevel);
+    // console.log('[DroneListItem]', drone.vehicleId, 'isSelected:', isSelected);
 
     const getStatusColor = (status: DroneStatus): string => {
         switch (status) {

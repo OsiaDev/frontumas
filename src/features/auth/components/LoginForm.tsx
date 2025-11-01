@@ -1,52 +1,20 @@
 // src/components/auth/LoginForm.tsx
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/useAuthStore';
-import { Input } from '@shared/components/Input';
-import { PasswordInput } from '@shared/components/PasswordInput';
-import { Button } from '@shared/components/Button';
+import { Shield } from 'lucide-react';
+import { authService } from '../services/auth.service';
 
 export const LoginForm = () => {
-    const navigate = useNavigate();
-    const login = useAuthStore((state) => state.login);
-    const error = useAuthStore((state) => state.error);
-    const clearError = useAuthStore((state) => state.clearError);
-    const isLoading = useAuthStore((state) => state.isLoading);
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [formError, setFormError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setFormError('');
-        clearError();
-
-        if (!username || !password) {
-            setFormError('Por favor completa todos los campos');
-            return;
-        }
-
+    const handleKeycloakLogin = async () => {
+        setIsLoading(true);
         try {
-            await login({ username, password });
-            navigate('/dashboard');
-        } catch {
-            // Error manejado en el contexto
+            await authService.login();
+        } catch (error) {
+            console.error('Error al iniciar sesión con Keycloak:', error);
+            setIsLoading(false);
         }
     };
-
-    const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setUsername(e.target.value);
-        if (formError) setFormError('');
-        if (error) clearError();
-    };
-
-    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setPassword(e.target.value);
-        if (formError) setFormError('');
-        if (error) clearError();
-    };
-
-    const displayError = formError || error;
 
     return (
         <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden p-4 bg-[#0f1823]">
@@ -69,45 +37,25 @@ export const LoginForm = () => {
                         <p className="text-sm text-gray-400 mt-1">Portal de Acceso Seguro</p>
                     </div>
 
-                    {displayError && (
-                        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                            <p className="text-sm text-red-300 text-center">{displayError}</p>
+                    <div className="space-y-4">
+                        <button
+                            onClick={handleKeycloakLogin}
+                            disabled={isLoading}
+                            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-[#004599] to-[#0056b3] hover:from-[#0056b3] hover:to-[#004599] text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-[#004599]/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                        >
+                            <Shield className="w-6 h-6" />
+                            {isLoading ? (
+                                <span>Redirigiendo...</span>
+                            ) : (
+                                <span>Login with Keycloak</span>
+                            )}
+                        </button>
+
+                        <div className="text-center">
+                            <p className="text-xs text-gray-400">
+                                Autenticación segura mediante Keycloak SSO
+                            </p>
                         </div>
-                    )}
-
-                    <form className="space-y-6" onSubmit={handleSubmit}>
-                        <Input
-                            id="username"
-                            name="username"
-                            type="text"
-                            placeholder="Usuario"
-                            value={username}
-                            onChange={handleUsernameChange}
-                            required
-                            autoComplete="username"
-                            disabled={isLoading}
-                        />
-
-                        <PasswordInput
-                            id="password"
-                            name="password"
-                            placeholder="Contraseña"
-                            value={password}
-                            onChange={handlePasswordChange}
-                            required
-                            autoComplete="current-password"
-                            disabled={isLoading}
-                        />
-
-                        <Button type="submit" isLoading={isLoading}>
-                            Iniciar Sesión
-                        </Button>
-                    </form>
-
-                    <div className="mt-6 text-center">
-                        <a className="text-sm text-[#004599]/80 hover:text-[#004599] underline transition-colors duration-300" href="#" onClick={(e) => e.preventDefault()}>
-                            ¿Olvidaste tu contraseña?
-                        </a>
                     </div>
                 </div>
                 <p className="mt-8 text-xs text-center text-gray-500">
