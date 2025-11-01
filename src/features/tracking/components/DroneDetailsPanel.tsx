@@ -5,7 +5,9 @@ import { useDroneStore } from '@features/drones';
 export const DroneDetailsPanel = () => {
     const selectedDroneId = useTrackingStore((state) => state.selectedDroneId);
     const selectDrone = useTrackingStore((state) => state.selectDrone);
-    const getDrone = useDroneStore((state) => state.getDrone);
+    const drone = useDroneStore((state) =>
+        selectedDroneId ? state.drones[selectedDroneId] : null
+    );
 
     if (!selectedDroneId) {
         return (
@@ -22,8 +24,6 @@ export const DroneDetailsPanel = () => {
             </div>
         );
     }
-
-    const drone = getDrone(selectedDroneId);
 
     if (!drone) {
         return (
