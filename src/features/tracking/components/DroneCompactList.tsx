@@ -3,13 +3,17 @@ import { Plane, RefreshCw, AlertCircle, Search } from 'lucide-react';
 import { useDronesApi, useDroneStore } from '@features/drones';
 import { useTrackingStore } from '../store/useTrackingStore';
 import type { DroneStatus } from '@shared/types/api.types';
+import type { DroneResponseDTO } from '@shared/types/api.types';
 
-export const DroneCompactList = () => {
-    const { drones, loading, error, refetch } = useDronesApi();
-    const selectedDroneId = useTrackingStore((state) => state.selectedDroneId);
-    const selectDrone = useTrackingStore((state) => state.selectDrone);
-    const mqttDrones = useDroneStore((state) => state.drones);
-    const [searchTerm, setSearchTerm] = useState('');
+interface DroneListItemProps {
+    drone: DroneResponseDTO;
+    isSelected: boolean;
+    onSelect: () => void;
+}
+
+const DroneListItem = ({ drone, isSelected, onSelect }: DroneListItemProps) => {
+    // Suscripción individual a este dron específico en el store MQTT
+    const mqttDrone = useDroneStore((state) => state.drones[drone.vehicleId]);
 
     const getStatusColor = (status: DroneStatus): string => {
         switch (status) {
@@ -41,15 +45,53 @@ export const DroneCompactList = () => {
         }
     };
 
-    const isConnected = (vehicleId: string): boolean => {
-        const mqttDrone = mqttDrones[vehicleId];
-        return mqttDrone?.connectionStatus === 'CONNECTED';
-    };
+    const isConnected = mqttDrone?.connectionStatus === 'CONNECTED';
+    const batteryLevel = mqttDrone?.lastLocation?.batteryLevel ?? null;
 
-    const getBatteryLevel = (vehicleId: string): number | null => {
-        const mqttDrone = mqttDrones[vehicleId];
-        return mqttDrone?.lastLocation?.batteryLevel ?? null;
-    };
+    return (
+        <button
+            onClick={onSelect}
+            className={`w-full text-left p-2 rounded-lg transition-all ${
+                isSelected
+                    ? 'bg-primary text-white shadow-md'
+                    : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+        >
+            <div className="flex items-center justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                        <span className={`text-xs font-semibold truncate ${isSelected ? 'text-white' : 'dark:text-white'}`}>
+                            {drone.vehicleId}
+                        </span>
+                        {isConnected && (
+                            <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+                        )}
+                    </div>
+                    <p className={`text-[10px] opacity-80 truncate ${isSelected ? 'text-white' : 'dark:text-gray-400'}`}>
+                        {drone.model}
+                    </p>
+                    {batteryLevel !== null && (
+                        <div className="flex items-center gap-1 mt-0.5">
+                            <span className={`text-[9px] font-medium ${isSelected ? 'text-white' : 'dark:text-gray-400'}`}>
+                                🔋 {batteryLevel}%
+                            </span>
+                        </div>
+                    )}
+                </div>
+                <div
+                    className={`w-2 h-2 rounded-full ${getStatusColor(drone.status)}`}
+                    title={getStatusText(drone.status)}
+                />
+            </div>
+        </button>
+    );
+};
+
+export const DroneCompactList = () => {
+    const { drones, loading, error, refetch } = useDronesApi();
+    const selectedDroneId = useTrackingStore((state) => state.selectedDroneId);
+    const selectDrone = useTrackingStore((state) => state.selectDrone);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const filteredDrones = drones.filter(drone => {
         const searchLower = searchTerm.toLowerCase();
@@ -141,9 +183,11 @@ export const DroneCompactList = () => {
                 ) : (
                     <div className="p-2 space-y-1">
                         {filteredDrones.map((drone) => (
-                            <button
+                            <DroneListItem
                                 key={drone.id}
-                                onClick={() => {
+                                drone={drone}
+                                isSelected={selectedDroneId === drone.vehicleId}
+                                onSelect={() => {
                                     // Toggle: si el dron ya está seleccionado, deseleccionarlo
                                     if (selectedDroneId === drone.vehicleId) {
                                         selectDrone(null);
@@ -151,39 +195,7 @@ export const DroneCompactList = () => {
                                         selectDrone(drone.vehicleId);
                                     }
                                 }}
-                                className={`w-full text-left p-2 rounded-lg transition-all ${
-                                    selectedDroneId === drone.vehicleId
-                                        ? 'bg-primary text-white shadow-md'
-                                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                                }`}
-                            >
-                                <div className="flex items-center justify-between gap-2">
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-1.5">
-                                            <span className={`text-xs font-semibold truncate ${selectedDroneId === drone.vehicleId ? 'text-white' : 'dark:text-white'}`}>
-                                                {drone.vehicleId}
-                                            </span>
-                                            {isConnected(drone.vehicleId) && (
-                                                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-                                            )}
-                                        </div>
-                                        <p className={`text-[10px] opacity-80 truncate ${selectedDroneId === drone.vehicleId ? 'text-white' : 'dark:text-gray-400'}`}>
-                                            {drone.model}
-                                        </p>
-                                        {getBatteryLevel(drone.vehicleId) !== null && (
-                                            <div className="flex items-center gap-1 mt-0.5">
-                                                <span className={`text-[9px] font-medium ${selectedDroneId === drone.vehicleId ? 'text-white' : 'dark:text-gray-400'}`}>
-                                                    🔋 {getBatteryLevel(drone.vehicleId)}%
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div
-                                        className={`w-2 h-2 rounded-full ${getStatusColor(drone.status)}`}
-                                        title={getStatusText(drone.status)}
-                                    />
-                                </div>
-                            </button>
+                            />
                         ))}
                     </div>
                 )}
