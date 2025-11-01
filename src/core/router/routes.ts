@@ -11,6 +11,7 @@ export const ROUTES = {
     DRONES: '/drones',
     GEOFENCES: '/geofences',
     ROUTES: '/routes',
+    MISSION: '/mission',
     USERS: '/users',
     REPORTS: '/reports',
     ANALYTICS: '/analytics',
