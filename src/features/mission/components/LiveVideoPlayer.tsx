@@ -42,18 +42,18 @@ export const LiveVideoPlayer = ({
             </div>
 
             {/* Controls - Optional, can be customized */}
-            <div className="px-4 py-2 bg-gray-50 dark:bg-gray-750 border-t border-gray-200 dark:border-gray-700">
+            <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <button
-                            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors"
+                            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
                             aria-label="Reproducir/Pausar"
                         >
                             <Play size={18} className="text-gray-700 dark:text-gray-300" />
                         </button>
                         <button
                             onClick={() => setIsMuted(!isMuted)}
-                            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors"
+                            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
                             aria-label="Silenciar"
                         >
                             {isMuted ? (
@@ -64,7 +64,7 @@ export const LiveVideoPlayer = ({
                         </button>
                     </div>
                     <button
-                        className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors"
+                        className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
                         aria-label="Pantalla completa"
                     >
                         <Maximize size={18} className="text-gray-700 dark:text-gray-300" />

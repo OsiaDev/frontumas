@@ -19,11 +19,11 @@ export const MissionPage = () => {
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2 text-sm">
-                            <Video size={16} className="text-gray-500" />
+                            <Video size={16} className="text-gray-500 dark:text-gray-400" />
                             <span className="text-gray-600 dark:text-gray-400">Video en Vivo</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm">
-                            <MapPin size={16} className="text-gray-500" />
+                            <MapPin size={16} className="text-gray-500 dark:text-gray-400" />
                             <span className="text-gray-600 dark:text-gray-400">Tracking GPS</span>
                         </div>
                     </div>

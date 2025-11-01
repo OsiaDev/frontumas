@@ -96,12 +96,12 @@ export const MissionDroneMap = () => {
 
             {/* Drone List */}
             {activeDrones.length > 0 && (
-                <div className="px-4 py-2 bg-gray-50 dark:bg-gray-750 border-t border-gray-200 dark:border-gray-700 max-h-32 overflow-y-auto">
+                <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 max-h-32 overflow-y-auto">
                     <div className="space-y-1">
                         {activeDrones.map((drone) => (
                             <div
                                 key={drone.vehicleId}
-                                className="flex items-center justify-between text-xs py-1 px-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded transition-colors"
+                                className="flex items-center justify-between text-xs py-1 px-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                             >
                                 <span className="font-medium text-gray-900 dark:text-white">
                                     {drone.vehicleId}
