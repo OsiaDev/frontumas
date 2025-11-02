@@ -43,7 +43,7 @@ export interface DroneAlertMessage {
 export interface DroneState {
     vehicleId: string;
     lastLocation: DroneLocationMessage;
-    lastUpdate: Date;
+    lastUpdate: string; // ISO timestamp string for persistence compatibility
     isActive: boolean;
     connectionStatus: 'CONNECTED' | 'DISCONNECTED' | 'UNKNOWN';
 }

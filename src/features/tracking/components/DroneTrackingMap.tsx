@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Polyline, Popup, useMap } from 'react-leaflet';
 import { MapPin, Navigation } from 'lucide-react';
 import { useDroneStore } from '@features/drones';
@@ -25,23 +25,47 @@ interface MapCenterControllerProps {
 
 const MapCenterController = ({ selectedDroneId, centerTarget }: MapCenterControllerProps) => {
     const map = useMap();
-    const drones = useDroneStore((state) => state.drones);
+    const prevDroneIdRef = useRef<string | null>(null);
 
-    // Centrar en dron seleccionado
+    // Suscripción específica solo al dron seleccionado, no a todos los drones
+    const selectedDrone = useDroneStore((state) =>
+        selectedDroneId ? state.drones[selectedDroneId] : null
+    );
+
+    // Centrar en dron seleccionado - Sigue al dron con actualizaciones MQTT
     useEffect(() => {
-        if (selectedDroneId && drones[selectedDroneId]) {
-            const drone = drones[selectedDroneId];
+        if (selectedDroneId && selectedDrone) {
+            const isDroneChange = prevDroneIdRef.current !== selectedDroneId;
+            prevDroneIdRef.current = selectedDroneId;
+
+            console.log('[MapCenterController] Centering map on:', selectedDroneId, 'at', [selectedDrone.lastLocation.latitude, selectedDrone.lastLocation.longitude]);
+
+            // Cerrar todos los popups abiertos antes de mover el mapa
+            map.closePopup();
+
+            // Detener cualquier animación en curso
+            map.stop();
+
+            // Centrar en el dron (cambio o actualización de posición)
             map.flyTo(
-                [drone.lastLocation.latitude, drone.lastLocation.longitude],
+                [selectedDrone.lastLocation.latitude, selectedDrone.lastLocation.longitude],
                 15,
-                { duration: 1 }
+                { duration: isDroneChange ? 0.8 : 0.5 } // Más rápido para seguimiento
             );
+        } else if (selectedDroneId) {
+            console.log('[MapCenterController] selectedDroneId is set but drone not found in store:', selectedDroneId);
+        } else {
+            console.log('[MapCenterController] No drone selected');
+            prevDroneIdRef.current = null;
+            // Cerrar popups también cuando se deselecciona
+            map.closePopup();
         }
-    }, [selectedDroneId, drones, map]);
+    }, [selectedDroneId, selectedDrone?.lastLocation.latitude, selectedDrone?.lastLocation.longitude, map]);
 
     // Centrar en geocerca
     useEffect(() => {
         if (centerTarget) {
+            console.log('[MapCenterController] Centering map on geofence:', centerTarget);
             map.flyTo(
                 [centerTarget.lat, centerTarget.lng],
                 centerTarget.zoom || 14,
@@ -75,6 +99,9 @@ export const DroneTrackingMap = ({ geofences, geofenceTypes, visibleGeofences, c
         heading: drone.lastLocation.heading,
         isSelected: drone.vehicleId === selectedDroneId,
     }));
+
+    // console.log('[DroneTrackingMap] selectedDroneId from store:', selectedDroneId);
+    // console.log('[DroneTrackingMap] markers:', markers.map(m => ({ id: m.vehicleId, isSelected: m.isSelected })));
 
     const defaultCenter: LatLngExpression = [DEFAULT_CITY.latitude, DEFAULT_CITY.longitude];
 
@@ -174,10 +201,14 @@ export const DroneTrackingMap = ({ geofences, geofenceTypes, visibleGeofences, c
                                         }}
                                         eventHandlers={{
                                             click: () => {
+                                                console.log('[DroneTrackingMap] Marker clicked:', marker.vehicleId);
+                                                console.log('[DroneTrackingMap] Current selectedDroneId:', selectedDroneId);
                                                 // Toggle: si el dron ya está seleccionado, deseleccionarlo
                                                 if (selectedDroneId === marker.vehicleId) {
+                                                    console.log('[DroneTrackingMap] Deselecting drone');
                                                     selectDrone(null);
                                                 } else {
+                                                    console.log('[DroneTrackingMap] Selecting drone:', marker.vehicleId);
                                                     selectDrone(marker.vehicleId);
                                                 }
                                             },

@@ -9,6 +9,8 @@ const DashboardPage = lazy(() => import('@features/tracking').then(m => ({ defau
 const DronesPage = lazy(() => import('@features/drones').then(m => ({ default: m.DronesPage })));
 const GeofencesPage = lazy(() => import('@features/geofences').then(m => ({ default: m.GeofencesPage })));
 const RoutesPage = lazy(() => import('@features/routes').then(m => ({ default: m.RoutesPage })));
+const MissionPage = lazy(() => import('@features/mission').then(m => ({ default: m.MissionPage })));
+const OperatorsPage = lazy(() => import('@features/operators').then(m => ({ default: m.OperatorsPage })));
 
 // Componente de carga
 const LoadingFallback = () => (
@@ -85,6 +87,32 @@ export const AppRouter = () => {
                             <MainLayout>
                                 <Suspense fallback={<LoadingFallback />}>
                                     <RoutesPage />
+                                </Suspense>
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path={ROUTES.MISSION}
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <Suspense fallback={<LoadingFallback />}>
+                                    <MissionPage />
+                                </Suspense>
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path={ROUTES.OPERATORS}
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <Suspense fallback={<LoadingFallback />}>
+                                    <OperatorsPage />
                                 </Suspense>
                             </MainLayout>
                         </ProtectedRoute>

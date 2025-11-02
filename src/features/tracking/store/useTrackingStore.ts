@@ -30,7 +30,9 @@ export const useTrackingStore = create<TrackingStoreState>()(
 
             // Acciones
             selectDrone: (vehicleId: string | null) => {
+                console.log('[TrackingStore] selectDrone called with:', vehicleId);
                 set({ selectedDroneId: vehicleId });
+                console.log('[TrackingStore] selectedDroneId is now:', vehicleId);
             },
 
             getDroneHistory: (vehicleId: string) => {
@@ -79,7 +81,7 @@ export const useTrackingStore = create<TrackingStoreState>()(
             },
         }),
         {
-            name: 'tracking-storage',
+            name: 'tracking-storage-v2', // Changed to force reset and ensure single selection
             partialize: (state) => ({
                 selectedDroneId: state.selectedDroneId,
                 histories: state.histories,

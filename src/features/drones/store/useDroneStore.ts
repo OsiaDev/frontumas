@@ -28,7 +28,7 @@ export const useDroneStore = create<DroneStoreState>()(
                     const updatedDrone: DroneState = {
                         vehicleId: message.vehicleId,
                         lastLocation: message,
-                        lastUpdate: new Date(),
+                        lastUpdate: new Date().toISOString(),
                         isActive: true,
                         connectionStatus: 'CONNECTED',
                     };
@@ -62,7 +62,8 @@ export const useDroneStore = create<DroneStoreState>()(
                 const drones = get().drones;
                 const now = Date.now();
                 return Object.values(drones).filter((drone) => {
-                    const timeSinceUpdate = now - new Date(drone.lastUpdate).getTime();
+                    const lastUpdateTime = new Date(drone.lastUpdate).getTime();
+                    const timeSinceUpdate = now - lastUpdateTime;
                     return timeSinceUpdate < MQTT_TIMEOUTS.INACTIVE_DRONE_TIMEOUT;
                 });
             },
@@ -72,7 +73,7 @@ export const useDroneStore = create<DroneStoreState>()(
             },
         }),
         {
-            name: 'drone-storage',
+            name: 'drone-storage-v2', // Changed from v1 to force migration from Date to string
             partialize: (state) => ({ drones: state.drones }),
         }
     )

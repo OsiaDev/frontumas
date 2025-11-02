@@ -14,12 +14,26 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // Verificar si hay sesión almacenada al cargar la app
-        const storedUser = authService.getStoredUser();
-        if (storedUser) {
-            setUser(storedUser);
-        }
-        setIsLoading(false);
+        // Inicializar Keycloak al cargar la app
+        const initAuth = async () => {
+            try {
+                const authenticated = await authService.initKeycloak();
+
+                if (authenticated) {
+                    const userData = authService.getStoredUser();
+                    if (userData) {
+                        setUser(userData);
+                    }
+                }
+            } catch (err) {
+                console.error('Error al inicializar autenticación:', err);
+                setError('Error al inicializar autenticación');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        initAuth();
     }, []);
 
     const login = async (credentials: LoginCredentials) => {
@@ -38,10 +52,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
     };
 
-    const logout = () => {
-        authService.logout();
-        setUser(null);
-        setError(null);
+    const logout = async () => {
+        try {
+            await authService.logout();
+            setUser(null);
+            setError(null);
+        } catch (err) {
+            console.error('Error al cerrar sesión:', err);
+        }
     };
 
     const clearError = () => {

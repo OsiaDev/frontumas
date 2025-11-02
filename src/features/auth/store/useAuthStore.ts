@@ -11,10 +11,11 @@ interface AuthState {
 
     // Acciones
     login: (credentials: LoginCredentials) => Promise<void>;
-    logout: () => void;
+    logout: () => Promise<void>;
     clearError: () => void;
     setLoading: (isLoading: boolean) => void;
     setUser: (user: User | null) => void;
+    initAuth: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -39,9 +40,13 @@ export const useAuthStore = create<AuthState>()(
                 }
             },
 
-            logout: () => {
-                authService.logout();
-                set({ user: null, error: null });
+            logout: async () => {
+                try {
+                    await authService.logout();
+                    set({ user: null, error: null });
+                } catch (err) {
+                    console.error('Error al cerrar sesión:', err);
+                }
             },
 
             clearError: () => {
@@ -54,6 +59,35 @@ export const useAuthStore = create<AuthState>()(
 
             setUser: (user: User | null) => {
                 set({ user });
+            },
+
+            initAuth: async () => {
+                // Evitar inicializar si ya hay un usuario o si está cargando
+                const currentState = get();
+                if (currentState.isLoading) {
+                    console.log('[AuthStore] Ya hay una inicialización en curso, omitiendo...');
+                    return;
+                }
+
+                set({ isLoading: true });
+                try {
+                    const authenticated = await authService.initKeycloak();
+
+                    if (authenticated) {
+                        const userData = authService.getStoredUser();
+                        if (userData) {
+                            console.log('[AuthStore] Usuario autenticado:', userData.username);
+                            set({ user: userData, isLoading: false });
+                            return;
+                        }
+                    }
+
+                    console.log('[AuthStore] No hay usuario autenticado');
+                    set({ isLoading: false });
+                } catch (err) {
+                    console.error('Error al inicializar autenticación:', err);
+                    set({ error: 'Error al inicializar autenticación', isLoading: false });
+                }
             },
         }),
         {
