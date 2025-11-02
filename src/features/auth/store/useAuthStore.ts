@@ -71,12 +71,25 @@ export const useAuthStore = create<AuthState>()(
 
                 set({ isLoading: true });
                 try {
-                    const authenticated = await authService.initKeycloak();
+                    const authMode = authService.getAuthMode();
 
-                    if (authenticated) {
+                    if (authMode === 'keycloak') {
+                        // Inicializar Keycloak
+                        const authenticated = await authService.initKeycloak();
+
+                        if (authenticated) {
+                            const userData = authService.getStoredUser();
+                            if (userData) {
+                                console.log('[AuthStore] Usuario autenticado con Keycloak:', userData.username);
+                                set({ user: userData, isLoading: false });
+                                return;
+                            }
+                        }
+                    } else {
+                        // Modo tradicional: verificar si hay usuario en localStorage
                         const userData = authService.getStoredUser();
                         if (userData) {
-                            console.log('[AuthStore] Usuario autenticado:', userData.username);
+                            console.log('[AuthStore] Usuario autenticado (tradicional):', userData.username);
                             set({ user: userData, isLoading: false });
                             return;
                         }
