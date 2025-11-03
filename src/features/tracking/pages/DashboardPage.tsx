@@ -122,7 +122,7 @@ export const NewDashboardPage = () => {
                 </div>
 
                 {/* Center - Map */}
-                <div className="xl:col-span-6 min-h-0">
+                <div className="xl:col-span-7 min-h-0">
                     <DroneTrackingMap
                         geofences={geofences}
                         geofenceTypes={geofenceTypes}
@@ -132,7 +132,7 @@ export const NewDashboardPage = () => {
                 </div>
 
                 {/* Right Sidebar - Details */}
-                <div className="xl:col-span-3 min-h-0 overflow-y-auto">
+                <div className="xl:col-span-2 min-h-0 overflow-y-auto">
                     <DroneDetailsPanel />
                 </div>
             </div>

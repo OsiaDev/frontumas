@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Polyline, Popup, useMap } from 'react-leaflet';
 import { MapPin, Navigation } from 'lucide-react';
 import { useDroneStore } from '@features/drones';
-import { useTrackingStore } from '../store/useTrackingStore';
+import { useTrackingStore } from '@/features';
 import { GeofenceLayer } from './GeofenceLayer';
 import { DEFAULT_CITY, MAP_TILE_CONFIG, MAP_ZOOM_CONFIG } from '@config/map.config';
 import 'leaflet/dist/leaflet.css';
