@@ -45,7 +45,7 @@ class MqttHandlers {
             return;
         }
 
-        this.log('Ubicación recibida:', data.vehicleId);
+        // this.log('Ubicación recibida:', data.vehicleId);
         this.notifyLocationCallbacks(data);
     }
 
@@ -56,7 +56,7 @@ class MqttHandlers {
             return;
         }
 
-        this.log('Geo-evento recibido:', data.vehicleId, data.eventType);
+        // this.log('Geo-evento recibido:', data.vehicleId, data.eventType);
         this.notifyGeoEventCallbacks(data);
     }
 
@@ -67,7 +67,7 @@ class MqttHandlers {
             return;
         }
 
-        this.log('Alerta recibida:', data.vehicleId, data.alertType);
+        // this.log('Alerta recibida:', data.vehicleId, data.alertType);
         this.notifyAlertCallbacks(data);
     }
 

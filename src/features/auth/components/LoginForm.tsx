@@ -1,52 +1,49 @@
 // src/components/auth/LoginForm.tsx
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Shield, User, Lock, LogIn } from 'lucide-react';
+import { authService, type AuthMode } from '../services/auth.service';
 import { useAuthStore } from '../store/useAuthStore';
-import { Input } from '@shared/components/Input';
-import { PasswordInput } from '@shared/components/PasswordInput';
-import { Button } from '@shared/components/Button';
+import { toast } from 'sonner';
 
 export const LoginForm = () => {
-    const navigate = useNavigate();
-    const login = useAuthStore((state) => state.login);
-    const error = useAuthStore((state) => state.error);
-    const clearError = useAuthStore((state) => state.clearError);
-    const isLoading = useAuthStore((state) => state.isLoading);
+    const [authMode, setAuthMode] = useState<AuthMode>(authService.getAuthMode());
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [formError, setFormError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const login = useAuthStore((state) => state.login);
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setFormError('');
-        clearError();
+    const handleModeChange = (mode: AuthMode) => {
+        setAuthMode(mode);
+        authService.setAuthMode(mode);
+    };
 
-        if (!username || !password) {
-            setFormError('Por favor completa todos los campos');
-            return;
+    const handleKeycloakLogin = async () => {
+        setIsLoading(true);
+        try {
+            await authService.login();
+        } catch (error) {
+            console.error('Error al iniciar sesión con Keycloak:', error);
+            setIsLoading(false);
         }
+    };
+
+    const handleTraditionalLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
 
         try {
             await login({ username, password });
-            navigate('/dashboard');
-        } catch {
-            // Error manejado en el contexto
+            toast.success('Bienvenido', {
+                description: `Has iniciado sesión como ${username}`,
+            });
+        } catch (error) {
+            console.error('Error al iniciar sesión:', error);
+            toast.error('Error de autenticación', {
+                description: 'Usuario o contraseña incorrectos',
+            });
+            setIsLoading(false);
         }
     };
-
-    const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setUsername(e.target.value);
-        if (formError) setFormError('');
-        if (error) clearError();
-    };
-
-    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setPassword(e.target.value);
-        if (formError) setFormError('');
-        if (error) clearError();
-    };
-
-    const displayError = formError || error;
 
     return (
         <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden p-4 bg-[#0f1823]">
@@ -69,46 +66,125 @@ export const LoginForm = () => {
                         <p className="text-sm text-gray-400 mt-1">Portal de Acceso Seguro</p>
                     </div>
 
-                    {displayError && (
-                        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                            <p className="text-sm text-red-300 text-center">{displayError}</p>
+                    {/* Mode Selector */}
+                    <div className="mb-6">
+                        <div className="flex items-center justify-center gap-2 p-1 bg-gray-800/50 rounded-lg">
+                            <button
+                                type="button"
+                                onClick={() => handleModeChange('traditional')}
+                                className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                                    authMode === 'traditional'
+                                        ? 'bg-[#004599] text-white shadow-lg'
+                                        : 'text-gray-400 hover:text-white'
+                                }`}
+                            >
+                                Tradicional
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleModeChange('keycloak')}
+                                className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                                    authMode === 'keycloak'
+                                        ? 'bg-[#004599] text-white shadow-lg'
+                                        : 'text-gray-400 hover:text-white'
+                                }`}
+                            >
+                                Keycloak SSO
+                            </button>
                         </div>
+                    </div>
+
+                    {/* Traditional Login Form */}
+                    {authMode === 'traditional' && (
+                        <form onSubmit={handleTraditionalLogin} className="space-y-4">
+                            <div>
+                                <label
+                                    htmlFor="username"
+                                    className="block text-sm font-medium text-gray-300 mb-2"
+                                >
+                                    Usuario
+                                </label>
+                                <div className="relative">
+                                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    <input
+                                        id="username"
+                                        type="text"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                        placeholder="admin"
+                                        required
+                                        disabled={isLoading}
+                                        className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#004599] focus:border-transparent transition-all disabled:opacity-50"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label
+                                    htmlFor="password"
+                                    className="block text-sm font-medium text-gray-300 mb-2"
+                                >
+                                    Contraseña
+                                </label>
+                                <div className="relative">
+                                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    <input
+                                        id="password"
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="••••••••"
+                                        required
+                                        disabled={isLoading}
+                                        className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#004599] focus:border-transparent transition-all disabled:opacity-50"
+                                    />
+                                </div>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-[#004599] to-[#0056b3] hover:from-[#0056b3] hover:to-[#004599] text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-[#004599]/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                            >
+                                <LogIn className="w-6 h-6" />
+                                {isLoading ? (
+                                    <span>Iniciando sesión...</span>
+                                ) : (
+                                    <span>Iniciar Sesión</span>
+                                )}
+                            </button>
+
+                            <div className="text-center">
+                                <p className="text-xs text-gray-400">
+                                    Credenciales de prueba: admin / admin
+                                </p>
+                            </div>
+                        </form>
                     )}
 
-                    <form className="space-y-6" onSubmit={handleSubmit}>
-                        <Input
-                            id="username"
-                            name="username"
-                            type="text"
-                            placeholder="Usuario"
-                            value={username}
-                            onChange={handleUsernameChange}
-                            required
-                            autoComplete="username"
-                            disabled={isLoading}
-                        />
+                    {/* Keycloak Login */}
+                    {authMode === 'keycloak' && (
+                        <div className="space-y-4">
+                            <button
+                                onClick={handleKeycloakLogin}
+                                disabled={isLoading}
+                                className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-[#004599] to-[#0056b3] hover:from-[#0056b3] hover:to-[#004599] text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-[#004599]/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                            >
+                                <Shield className="w-6 h-6" />
+                                {isLoading ? (
+                                    <span>Redirigiendo...</span>
+                                ) : (
+                                    <span>Login with Keycloak</span>
+                                )}
+                            </button>
 
-                        <PasswordInput
-                            id="password"
-                            name="password"
-                            placeholder="Contraseña"
-                            value={password}
-                            onChange={handlePasswordChange}
-                            required
-                            autoComplete="current-password"
-                            disabled={isLoading}
-                        />
-
-                        <Button type="submit" isLoading={isLoading}>
-                            Iniciar Sesión
-                        </Button>
-                    </form>
-
-                    <div className="mt-6 text-center">
-                        <a className="text-sm text-[#004599]/80 hover:text-[#004599] underline transition-colors duration-300" href="#" onClick={(e) => e.preventDefault()}>
-                            ¿Olvidaste tu contraseña?
-                        </a>
-                    </div>
+                            <div className="text-center">
+                                <p className="text-xs text-gray-400">
+                                    Autenticación segura mediante Keycloak SSO
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </div>
                 <p className="mt-8 text-xs text-center text-gray-500">
                     © 2024 Fuerza Aeroespacial Colombiana. Todos los derechos reservados.

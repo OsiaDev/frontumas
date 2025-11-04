@@ -52,9 +52,12 @@ export const DroneForm = ({ initialData, onSubmit, onCancel, isLoading = false, 
             newErrors.serialNumber = 'El número de serie es requerido';
         }
 
-        const hoursValue = parseFloat(flightHours);
-        if (isNaN(hoursValue) || hoursValue < 0) {
-            newErrors.flightHours = 'Las horas de vuelo deben ser un número válido mayor o igual a 0';
+        // Solo validar flightHours en modo creación
+        if (mode === 'create') {
+            const hoursValue = parseFloat(flightHours);
+            if (isNaN(hoursValue) || hoursValue < 0) {
+                newErrors.flightHours = 'Las horas de vuelo deben ser un número válido mayor o igual a 0';
+            }
         }
 
         setErrors(newErrors);
@@ -73,7 +76,8 @@ export const DroneForm = ({ initialData, onSubmit, onCancel, isLoading = false, 
             model: model.trim(),
             description: description.trim(),
             serialNumber: serialNumber.trim(),
-            flightHours: parseFloat(flightHours),
+            // Solo incluir flightHours en modo creación
+            ...(mode === 'create' && { flightHours: parseFloat(flightHours) }),
         };
 
         onSubmit(data);
@@ -183,9 +187,9 @@ export const DroneForm = ({ initialData, onSubmit, onCancel, isLoading = false, 
                     value={flightHours}
                     onChange={(e) => handleFieldChange('flightHours', e.target.value)}
                     error={errors.flightHours}
-                    disabled={isLoading}
+                    disabled={isLoading || mode === 'edit'}
                     icon={<Clock size={18} />}
-                    required
+                    required={mode === 'create'}
                 />
             </div>
 

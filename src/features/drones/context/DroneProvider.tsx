@@ -20,7 +20,7 @@ export const DroneProvider = ({ children }: DroneProviderProps) => {
             const updatedDrone: DroneState = {
                 vehicleId: message.vehicleId,
                 lastLocation: message,
-                lastUpdate: new Date(),
+                lastUpdate: new Date().toISOString(),
                 isActive: true,
                 connectionStatus: 'CONNECTED',
             };
@@ -55,7 +55,8 @@ export const DroneProvider = ({ children }: DroneProviderProps) => {
     const getActiveDrones = useCallback((): DroneState[] => {
         const now = Date.now();
         return Object.values(drones).filter(drone => {
-            const timeSinceUpdate = now - drone.lastUpdate.getTime();
+            const lastUpdateTime = new Date(drone.lastUpdate).getTime();
+            const timeSinceUpdate = now - lastUpdateTime;
             return timeSinceUpdate < MQTT_TIMEOUTS.INACTIVE_DRONE_TIMEOUT;
         });
     }, [drones]);

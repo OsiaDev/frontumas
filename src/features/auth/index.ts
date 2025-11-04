@@ -16,6 +16,10 @@ export { useAuthStore, selectIsAuthenticated } from './store/useAuthStore';
 
 // Services
 export { authService } from './services/auth.service';
+export type { AuthMode } from './services/auth.service';
+
+// Hooks
+export { useUserRoles } from './hooks/useUserRoles';
 
 // Types
 export type { User, LoginCredentials, AuthContextType } from './types/auth.types';
