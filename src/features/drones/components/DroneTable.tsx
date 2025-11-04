@@ -178,7 +178,7 @@ export const DroneTable = () => {
                                                 <div className="flex flex-col">
                                                     <span className="text-sm text-gray-700 dark:text-gray-300">{drone.model}</span>
                                                     <span className="text-xs text-gray-500 dark:text-gray-500">
-                                                        {drone.description} | {drone.flightHours.toFixed(2)}h vuelo
+                                                        {drone.description} | {drone.flightHours?.toFixed(2)}h vuelo
                                                     </span>
                                                 </div>
                                             </td>
