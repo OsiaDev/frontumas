@@ -6,6 +6,7 @@ export { DroneCompactList } from './components/DroneCompactList';
 export { DroneDetailsPanel } from './components/DroneDetailsPanel';
 export { createDroneIcon } from './components/DroneMarkerIcon';
 export { MapCoordinatesDisplay } from './components/MapCoordinatesDisplay';
+export { SmoothDroneMarker } from './components/SmoothDroneMarker';
 
 // Pages
 export { NewDashboardPage as DashboardPage } from './pages/DashboardPage';
@@ -20,6 +21,7 @@ export { useTrackingStore } from './store/useTrackingStore';
 // Hooks
 export { useMqttConnection } from './hooks/useMqttConnection';
 export { useDroneLocations } from './hooks/useDroneLocations';
+export { useSmoothDronePosition } from './hooks/useSmoothDronePosition';
 export type { ConnectionStatus } from './hooks/useMqttConnection';
 
 // Services
