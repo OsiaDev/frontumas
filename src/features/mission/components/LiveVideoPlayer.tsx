@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
+import { Play, Volume2, VolumeX, Maximize } from 'lucide-react';
 
 interface LiveVideoPlayerProps {
     videoUrl?: string;

@@ -6,24 +6,7 @@ import { DroneCreateModal } from './DroneCreateModal';
 import { DroneEditModal } from './DroneEditModal';
 import { DroneDeleteConfirm } from './DroneDeleteConfirm';
 import { DroneStatusSelect } from './DroneStatusSelect';
-import { Button } from '@shared/components/Button';
 import type { DroneResponseDTO } from '@shared/types/api.types';
-
-const STATUS_LABELS: Record<string, string> = {
-    ACTIVE: 'Activo',
-    IN_MAINTENANCE: 'En Mantenimiento',
-    REPAIRING: 'En Reparación',
-    OUT_OF_SERVICE: 'Fuera de Servicio',
-    DECOMMISSIONED: 'Dado de Baja',
-};
-
-const STATUS_COLORS: Record<string, string> = {
-    ACTIVE: 'bg-green-500/20 text-green-400 border-green-500/30',
-    IN_MAINTENANCE: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-    REPAIRING: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-    OUT_OF_SERVICE: 'bg-red-500/20 text-red-400 border-red-500/30',
-    DECOMMISSIONED: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
-};
 
 export const DroneTable = () => {
     const { data: drones, isLoading, isError, error } = useDronesQuery();

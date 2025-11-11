@@ -1,10 +1,8 @@
 import type {
     DroneResponseDTO,
-    DronesListResponse,
     ApiError,
     CreateDroneDTO,
     UpdateDroneDTO,
-    UpdateDroneStatusDTO,
     DroneStatus,
 } from '@shared/types/api.types';
 import { API_CONFIG, API_ROUTES } from '@config/api.config';

@@ -58,3 +58,14 @@ export const MAP_ZOOM_CONFIG = {
     max: 19,
     maxNativeZoom: 19,
 } as const;
+
+// Alias para compatibilidad con el index.ts
+export const COLOMBIAN_CITIES = CITIES;
+
+// Objeto de configuración consolidado
+export const MAP_CONFIG = {
+    tile: MAP_TILE_CONFIG,
+    zoom: MAP_ZOOM_CONFIG,
+    defaultCity: DEFAULT_CITY,
+    cities: CITIES,
+} as const;

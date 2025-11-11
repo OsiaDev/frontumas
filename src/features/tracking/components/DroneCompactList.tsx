@@ -21,12 +21,14 @@ const DroneListItem = ({ drone, isSelected, onSelect }: DroneListItemProps) => {
         switch (status) {
             case 'ACTIVE':
                 return 'bg-green-500';
-            case 'INACTIVE':
-                return 'bg-gray-500';
-            case 'MAINTENANCE':
+            case 'IN_MAINTENANCE':
                 return 'bg-yellow-500';
-            case 'OFFLINE':
+            case 'REPAIRING':
+                return 'bg-orange-500';
+            case 'OUT_OF_SERVICE':
                 return 'bg-red-500';
+            case 'DECOMMISSIONED':
+                return 'bg-gray-500';
             default:
                 return 'bg-gray-400';
         }
@@ -36,12 +38,14 @@ const DroneListItem = ({ drone, isSelected, onSelect }: DroneListItemProps) => {
         switch (status) {
             case 'ACTIVE':
                 return 'Activo';
-            case 'INACTIVE':
-                return 'Inactivo';
-            case 'MAINTENANCE':
+            case 'IN_MAINTENANCE':
                 return 'Mantenimiento';
-            case 'OFFLINE':
-                return 'Offline';
+            case 'REPAIRING':
+                return 'En Reparación';
+            case 'OUT_OF_SERVICE':
+                return 'Fuera de Servicio';
+            case 'DECOMMISSIONED':
+                return 'Desactivado';
             default:
                 return status;
         }

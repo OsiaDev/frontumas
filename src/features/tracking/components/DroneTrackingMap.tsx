@@ -186,7 +186,6 @@ export const DroneTrackingMap = ({ geofences, geofenceTypes, visibleGeofences, c
                                     key={marker.vehicleId}
                                     vehicleId={marker.vehicleId}
                                     targetPosition={targetPosition}
-                                    heading={marker.heading}
                                     isSelected={marker.isSelected}
                                     historyPath={historyPath}
                                     onMarkerClick={() => {

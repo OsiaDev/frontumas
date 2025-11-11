@@ -1,7 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { DroneMap, DroneState, DroneLocationMessage } from '@shared/types/drone.types';
+import type { DroneMap, DroneLocationMessage } from '@shared/types/drone.types';
+import type { DroneState } from '@shared/types/drone.types';
 import { MQTT_TIMEOUTS } from '@config/mqtt.config';
+
+// Re-exportar DroneState para uso en otros componentes
+export type { DroneState };
 
 interface DroneStoreState {
     // Estado

@@ -95,7 +95,7 @@ export const MissionDroneMap = () => {
                                     <div className="text-xs text-gray-600 mt-1 space-y-0.5">
                                         <div>Alt: {selectedDrone.lastLocation.altitude?.toFixed(1) || 'N/A'}m</div>
                                         <div>Vel: {selectedDrone.lastLocation.speed?.toFixed(1) || 'N/A'} m/s</div>
-                                        <div>Bat: {selectedDrone.batteryLevel || 'N/A'}%</div>
+                                        <div>Bat: {selectedDrone.lastLocation.batteryLevel || 'N/A'}%</div>
                                     </div>
                                 </div>
                             </Popup>

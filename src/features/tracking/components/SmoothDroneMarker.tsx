@@ -7,7 +7,6 @@ import type { Position } from '../hooks/useSmoothDronePosition';
 interface SmoothDroneMarkerProps {
     vehicleId: string;
     targetPosition: Position;
-    heading: number;
     isSelected: boolean;
     historyPath: LatLngExpression[];
     onMarkerClick: () => void;
@@ -16,7 +15,6 @@ interface SmoothDroneMarkerProps {
 export const SmoothDroneMarker = ({
     vehicleId,
     targetPosition,
-    heading,
     isSelected,
     historyPath,
     onMarkerClick,

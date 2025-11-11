@@ -14,8 +14,6 @@ export const DroneProvider = ({ children }: DroneProviderProps) => {
     // Actualizar ubicación de un dron
     const updateDroneLocation = useCallback((message: DroneLocationMessage) => {
         setDrones(prev => {
-            const existingDrone = prev[message.vehicleId];
-
             // Crear o actualizar el estado del dron
             const updatedDrone: DroneState = {
                 vehicleId: message.vehicleId,

@@ -2,8 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { Input } from '@shared/components/Input';
 import { Button } from '@shared/components/Button';
 import { Package, Hash, FileText, Barcode, Clock } from 'lucide-react';
-import type { CreateDroneDTO, DroneResponseDTO, DroneStatus } from '@shared/types/api.types';
-import { useDroneStatuses } from '../hooks/useDrones';
+import type { CreateDroneDTO, DroneResponseDTO } from '@shared/types/api.types';
 
 interface DroneFormProps {
     initialData?: DroneResponseDTO;
@@ -20,8 +19,6 @@ export const DroneForm = ({ initialData, onSubmit, onCancel, isLoading = false, 
     const [serialNumber, setSerialNumber] = useState(initialData?.serialNumber || '');
     const [flightHours, setFlightHours] = useState(initialData?.flightHours?.toString() || '0');
     const [errors, setErrors] = useState<Record<string, string>>({});
-
-    const { data: statuses } = useDroneStatuses();
 
     useEffect(() => {
         if (initialData) {
@@ -76,8 +73,7 @@ export const DroneForm = ({ initialData, onSubmit, onCancel, isLoading = false, 
             model: model.trim(),
             description: description.trim(),
             serialNumber: serialNumber.trim(),
-            // Solo incluir flightHours en modo creación
-            ...(mode === 'create' && { flightHours: parseFloat(flightHours) }),
+            flightHours: mode === 'create' ? parseFloat(flightHours) : 0,
         };
 
         onSubmit(data);

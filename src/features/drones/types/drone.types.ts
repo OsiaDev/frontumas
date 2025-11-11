@@ -43,7 +43,7 @@ export interface DroneAlertMessage {
 export interface DroneState {
     vehicleId: string;
     lastLocation: DroneLocationMessage;
-    lastUpdate: Date;
+    lastUpdate: string;
     isActive: boolean;
     connectionStatus: 'CONNECTED' | 'DISCONNECTED' | 'UNKNOWN';
 }
@@ -52,11 +52,13 @@ export interface DroneState {
 export type DroneMap = Record<string, DroneState>;
 
 // Topics MQTT disponibles
-export enum MqttTopics {
-    LOCATION = 'drone/+/location',
-    GEO_EVENT = 'drone/+/geoevent',
-    ALERT = 'drone/+/alert',
-}
+export const MqttTopics = {
+    LOCATION: 'drone/+/location',
+    GEO_EVENT: 'drone/+/geoevent',
+    ALERT: 'drone/+/alert',
+} as const;
+
+export type MqttTopics = typeof MqttTopics[keyof typeof MqttTopics];
 
 // Configuración de suscripción a topics
 export interface TopicSubscription {
