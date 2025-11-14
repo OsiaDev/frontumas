@@ -90,7 +90,6 @@ export const DroneTrackingMap = ({ geofences, geofenceTypes, visibleGeofences, c
     const drones = useDroneStore((state) => state.drones);
     const selectedDroneId = useTrackingStore((state) => state.selectedDroneId);
     const selectDrone = useTrackingStore((state) => state.selectDrone);
-    const getDroneHistory = useTrackingStore((state) => state.getDroneHistory);
 
     const activeDrones = Object.values(drones).filter(d => d.isActive);
 
@@ -167,10 +166,11 @@ export const DroneTrackingMap = ({ geofences, geofenceTypes, visibleGeofences, c
                         {/* <MapCoordinatesDisplay /> */}
 
                         {markers.map((marker) => {
-                            const history = getDroneHistory(marker.vehicleId);
+                            // Obtener el dron completo del store para acceder a lastPositions
+                            const drone = drones[marker.vehicleId];
 
-                            // Convertir historial a formato Leaflet
-                            const historyPath: LatLngExpression[] = history.map(pos => [
+                            // Convertir lastPositions a formato Leaflet para la ruta
+                            const historyPath: LatLngExpression[] = drone.lastPositions.map(pos => [
                                 pos.latitude,
                                 pos.longitude,
                             ]);
