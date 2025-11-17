@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import type { AxiosInstance, AxiosRequestConfig } from 'axios';
-import { authService } from '@services/auth.service';
+import { authService } from '@features/auth/services/auth.service';
 import { createApiError, logError } from '@shared/utils/handleError';
 import { ERROR_MESSAGES } from '@shared/utils/constants';
 

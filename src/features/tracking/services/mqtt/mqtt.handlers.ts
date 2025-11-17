@@ -1,6 +1,4 @@
 import type { DroneLocationMessage, DroneGeoEventMessage, DroneAlertMessage } from '@shared/types/drone.types';
-import { MqttTopics } from '@shared/types/drone.types';
-import { MQTT_DEBUG_ENABLED } from '@config/mqtt.config';
 
 // Tipo para callback de ubicación
 export type LocationCallback = (message: DroneLocationMessage) => void;
@@ -190,12 +188,6 @@ class MqttHandlers {
     }
 
     // Logging en desarrollo
-    private log(...args: unknown[]): void {
-        if (MQTT_DEBUG_ENABLED) {
-            console.log('[MQTT Handlers]', ...args);
-        }
-    }
-
     private logError(...args: unknown[]): void {
         console.error('[MQTT Handlers]', ...args);
     }

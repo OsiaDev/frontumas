@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Popup, Polyline, useMap } from 'react-leaflet';
 import { useEffect } from 'react';
 import { useDroneStore } from '@features/drones';
 import { MapPin, Navigation } from 'lucide-react';
@@ -74,6 +74,21 @@ export const MissionDroneMap = () => {
                             maxZoom={MAP_TILE_CONFIG.maxZoom}
                         />
 
+                        {/* Ruta del dron (últimas 30 posiciones) */}
+                        {selectedDrone.lastPositions.length > 1 && (
+                            <Polyline
+                                positions={selectedDrone.lastPositions.map(pos => [
+                                    pos.latitude,
+                                    pos.longitude,
+                                ])}
+                                pathOptions={{
+                                    color: '#3b82f6',
+                                    weight: 3,
+                                    opacity: 0.7,
+                                }}
+                            />
+                        )}
+
                         <CircleMarker
                             center={[
                                 selectedDrone.lastLocation.latitude,
@@ -95,7 +110,8 @@ export const MissionDroneMap = () => {
                                     <div className="text-xs text-gray-600 mt-1 space-y-0.5">
                                         <div>Alt: {selectedDrone.lastLocation.altitude?.toFixed(1) || 'N/A'}m</div>
                                         <div>Vel: {selectedDrone.lastLocation.speed?.toFixed(1) || 'N/A'} m/s</div>
-                                        <div>Bat: {selectedDrone.batteryLevel || 'N/A'}%</div>
+                                        <div>Bat: {selectedDrone.lastLocation.batteryLevel || 'N/A'}%</div>
+                                        <div>Posiciones: {selectedDrone.lastPositions.length}/30</div>
                                     </div>
                                 </div>
                             </Popup>
