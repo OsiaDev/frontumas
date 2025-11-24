@@ -15,11 +15,32 @@ export const DroneProvider = ({ children }: DroneProviderProps) => {
     const updateDroneLocation = useCallback((message: DroneLocationMessage) => {
         setDrones(prev => {
             const existingDrone = prev[message.vehicleId];
+            const currentPositions = existingDrone?.lastPositions || [];
+
+            // Verificar si la posición es diferente de la última registrada
+            const lastPosition = currentPositions[currentPositions.length - 1];
+            const isDifferentPosition =
+                !lastPosition ||
+                lastPosition.latitude !== message.latitude ||
+                lastPosition.longitude !== message.longitude;
+
+            // Actualizar el array de posiciones
+            let updatedPositions = [...currentPositions];
+
+            if (isDifferentPosition) {
+                updatedPositions.push(message);
+
+                // Mantener solo las últimas 30 posiciones
+                if (updatedPositions.length > 30) {
+                    updatedPositions = updatedPositions.slice(-30);
+                }
+            }
 
             // Crear o actualizar el estado del dron
             const updatedDrone: DroneState = {
                 vehicleId: message.vehicleId,
                 lastLocation: message,
+                lastPositions: updatedPositions,
                 lastUpdate: new Date().toISOString(),
                 isActive: true,
                 connectionStatus: 'CONNECTED',

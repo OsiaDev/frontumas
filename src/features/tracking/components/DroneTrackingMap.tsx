@@ -1,13 +1,15 @@
 import { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Polyline, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { MapPin, Navigation } from 'lucide-react';
 import { useDroneStore } from '@features/drones';
 import { useTrackingStore } from '@/features';
 import { GeofenceLayer } from './GeofenceLayer';
+import { SmoothDroneMarker } from './SmoothDroneMarker';
 import { DEFAULT_CITY, MAP_TILE_CONFIG, MAP_ZOOM_CONFIG } from '@config/map.config';
 import 'leaflet/dist/leaflet.css';
 import type { LatLngExpression } from 'leaflet';
 import type { Geofence, GeofenceType } from '@shared/types/geofence.types';
+import type { Position } from '../hooks/useSmoothDronePosition';
 
 interface MapMarker {
     vehicleId: string;
@@ -88,7 +90,6 @@ export const DroneTrackingMap = ({ geofences, geofenceTypes, visibleGeofences, c
     const drones = useDroneStore((state) => state.drones);
     const selectedDroneId = useTrackingStore((state) => state.selectedDroneId);
     const selectDrone = useTrackingStore((state) => state.selectDrone);
-    const getDroneHistory = useTrackingStore((state) => state.getDroneHistory);
 
     const activeDrones = Object.values(drones).filter(d => d.isActive);
 
@@ -165,67 +166,41 @@ export const DroneTrackingMap = ({ geofences, geofenceTypes, visibleGeofences, c
                         {/* <MapCoordinatesDisplay /> */}
 
                         {markers.map((marker) => {
-                            const history = getDroneHistory(marker.vehicleId);
-                            const position: LatLngExpression = [marker.latitude, marker.longitude];
+                            // Obtener el dron completo del store para acceder a lastPositions
+                            const drone = drones[marker.vehicleId];
 
-                            // Convertir historial a formato Leaflet
-                            const historyPath: LatLngExpression[] = history.map(pos => [
+                            // Convertir lastPositions a formato Leaflet para la ruta
+                            const historyPath: LatLngExpression[] = drone.lastPositions.map(pos => [
                                 pos.latitude,
                                 pos.longitude,
                             ]);
 
-                            return (
-                                <div key={marker.vehicleId}>
-                                    {/* Línea de trayectoria */}
-                                    {historyPath.length > 1 && (
-                                        <Polyline
-                                            positions={historyPath}
-                                            pathOptions={{
-                                                color: marker.isSelected ? '#3b82f6' : '#94a3b8',
-                                                weight: 3,
-                                                opacity: marker.isSelected ? 0.8 : 0.4,
-                                                className: 'drone-polyline',
-                                            }}
-                                        />
-                                    )}
+                            // Posición objetivo para interpolación
+                            const targetPosition: Position = {
+                                latitude: marker.latitude,
+                                longitude: marker.longitude,
+                            };
 
-                                    {/* Marcador del dron */}
-                                    <CircleMarker
-                                        center={position}
-                                        radius={marker.isSelected ? 12 : 8}
-                                        pathOptions={{
-                                            fillColor: marker.isSelected ? '#3b82f6' : '#10b981',
-                                            fillOpacity: 1,
-                                            color: '#ffffff',
-                                            weight: 2,
-                                        }}
-                                        eventHandlers={{
-                                            click: () => {
-                                                console.log('[DroneTrackingMap] Marker clicked:', marker.vehicleId);
-                                                console.log('[DroneTrackingMap] Current selectedDroneId:', selectedDroneId);
-                                                // Toggle: si el dron ya está seleccionado, deseleccionarlo
-                                                if (selectedDroneId === marker.vehicleId) {
-                                                    console.log('[DroneTrackingMap] Deselecting drone');
-                                                    selectDrone(null);
-                                                } else {
-                                                    console.log('[DroneTrackingMap] Selecting drone:', marker.vehicleId);
-                                                    selectDrone(marker.vehicleId);
-                                                }
-                                            },
-                                        }}
-                                    >
-                                        <Popup>
-                                            <div className="text-sm">
-                                                <p className="font-bold text-gray-900">
-                                                    {marker.vehicleId}
-                                                </p>
-                                                <p className="text-gray-600 text-xs mt-1">
-                                                    Click para ver detalles
-                                                </p>
-                                            </div>
-                                        </Popup>
-                                    </CircleMarker>
-                                </div>
+                            return (
+                                <SmoothDroneMarker
+                                    key={marker.vehicleId}
+                                    vehicleId={marker.vehicleId}
+                                    targetPosition={targetPosition}
+                                    isSelected={marker.isSelected}
+                                    historyPath={historyPath}
+                                    onMarkerClick={() => {
+                                        console.log('[DroneTrackingMap] Marker clicked:', marker.vehicleId);
+                                        console.log('[DroneTrackingMap] Current selectedDroneId:', selectedDroneId);
+                                        // Toggle: si el dron ya está seleccionado, deseleccionarlo
+                                        if (selectedDroneId === marker.vehicleId) {
+                                            console.log('[DroneTrackingMap] Deselecting drone');
+                                            selectDrone(null);
+                                        } else {
+                                            console.log('[DroneTrackingMap] Selecting drone:', marker.vehicleId);
+                                            selectDrone(marker.vehicleId);
+                                        }
+                                    }}
+                                />
                             );
                         })}
                     </MapContainer>

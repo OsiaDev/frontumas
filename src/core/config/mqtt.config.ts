@@ -58,3 +58,11 @@ export const MQTT_TIMEOUTS = {
 
 // Logging de eventos MQTT (solo en desarrollo)
 export const MQTT_DEBUG_ENABLED = import.meta.env.DEV;
+
+// Objeto de configuración consolidado
+export const MQTT_CONFIG = {
+    broker: MQTT_BROKER_CONFIG,
+    client: MQTT_CLIENT_OPTIONS,
+    timeouts: MQTT_TIMEOUTS,
+    debug: MQTT_DEBUG_ENABLED,
+} as const;
