@@ -37,4 +37,22 @@ export const API_ROUTES = {
         DEACTIVATE: (id: string) => `/api/v1/routes/${id}/deactivate`,
         DELETE: (id: string) => `/api/v1/routes/${id}`,
     },
+    MISSIONS: {
+        LIST: '/api/v1/missions',
+        AUTHORIZED: '/api/v1/missions/authorized',
+        UNAUTHORIZED: '/api/v1/missions/unauthorized',
+        HEALTH: '/api/v1/missions/health',
+        GET_BY_ID: (id: string) => `/api/v1/missions/${id}`,
+        CREATE: '/api/v1/missions',
+        APPROVE: (id: string) => `/api/v1/missions/approve/${id}`,
+        EXECUTE: (id: string) => `/api/v1/missions/execute/${id}`,
+        DELETE: (id: string) => `/api/v1/missions/${id}`,
+    },
+    OPERATORS: {
+        LIST: '/api/v1/operators',
+        GET_BY_ID: (id: string) => `/api/v1/operators/${id}`,
+        CREATE: '/api/v1/operators',
+        UPDATE: (id: string) => `/api/v1/operators/${id}`,
+        DELETE: (id: string) => `/api/v1/operators/${id}`,
+    },
 } as const;

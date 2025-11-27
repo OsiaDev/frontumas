@@ -10,6 +10,8 @@ const DronesPage = lazy(() => import('@features/drones').then(m => ({ default: m
 const GeofencesPage = lazy(() => import('@features/geofences').then(m => ({ default: m.GeofencesPage })));
 const RoutesPage = lazy(() => import('@features/routes').then(m => ({ default: m.RoutesPage })));
 const MissionPage = lazy(() => import('@features/mission').then(m => ({ default: m.MissionPage })));
+const MissionsListPage = lazy(() => import('@features/missions').then(m => ({ default: m.MissionsListPage })));
+const MissionFormPage = lazy(() => import('@features/missions').then(m => ({ default: m.MissionFormPage })));
 const OperatorsPage = lazy(() => import('@features/operators').then(m => ({ default: m.OperatorsPage })));
 
 // Componente de carga
@@ -113,6 +115,46 @@ export const AppRouter = () => {
                             <MainLayout>
                                 <Suspense fallback={<LoadingFallback />}>
                                     <OperatorsPage />
+                                </Suspense>
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* Misiones */}
+                <Route
+                    path={ROUTES.MISSIONS}
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <Suspense fallback={<LoadingFallback />}>
+                                    <MissionsListPage />
+                                </Suspense>
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path={ROUTES.MISSIONS_NEW}
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <Suspense fallback={<LoadingFallback />}>
+                                    <MissionFormPage />
+                                </Suspense>
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path={ROUTES.MISSIONS_EDIT}
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <Suspense fallback={<LoadingFallback />}>
+                                    <MissionFormPage />
                                 </Suspense>
                             </MainLayout>
                         </ProtectedRoute>

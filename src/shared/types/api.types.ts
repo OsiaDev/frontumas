@@ -43,3 +43,36 @@ export interface ApiError {
     code?: string;
     details?: unknown;
 }
+
+// Tipos para el API REST de operadores
+
+export type OperatorStatus = 'ACTIVE' | 'INACTIVE' | 'ON_MISSION';
+
+export interface OperatorResponseDTO {
+    id: string;
+    username: string;
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    ugcsUserId?: string;
+    status: OperatorStatus;
+    isAvailable: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface CreateOperatorDTO {
+    username: string;
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    ugcsUserId?: string;
+}
+
+export interface UpdateOperatorDTO {
+    username?: string;
+    fullName?: string;
+    email?: string;
+    phoneNumber?: string;
+    ugcsUserId?: string;
+}
