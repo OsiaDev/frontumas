@@ -156,9 +156,7 @@ class AuthService {
             }
 
             // Redirigir al login de Keycloak (contexto seguro - usa PKCE)
-            await this.keycloakInstance.login({
-                redirectUri: window.location.origin + '/dashboard',
-            });
+            await this.keycloakInstance.login();
 
             // Después del login, obtener datos del usuario
             const user = this.getUserFromKeycloak();
