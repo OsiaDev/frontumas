@@ -11,6 +11,11 @@ class AuthService {
     private isInitialized = false;
     private initializationPromise: Promise<boolean> | null = null;
 
+    // Verificar si estamos en un contexto seguro (HTTPS o localhost)
+    private isSecureContext(): boolean {
+        return window.isSecureContext || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    }
+
     // Obtener el modo de autenticación actual
     getAuthMode(): AuthMode {
         return (localStorage.getItem(AUTH_MODE_KEY) as AuthMode) || 'traditional';
@@ -42,11 +47,17 @@ class AuthService {
             try {
                 console.log('[Keycloak] Iniciando...');
 
-                const authenticated = await this.keycloakInstance.init({
+                // Solo usar PKCE si estamos en contexto seguro (HTTPS o localhost)
+                const initOptions: Keycloak.KeycloakInitOptions = {
                     onLoad: 'check-sso',
                     checkLoginIframe: false, // Deshabilitar iframe check para evitar problemas de CORS
-                    pkceMethod: 'S256',
-                });
+                };
+
+                if (this.isSecureContext()) {
+                    initOptions.pkceMethod = 'S256';
+                }
+
+                const authenticated = await this.keycloakInstance.init(initOptions);
 
                 this.isInitialized = true;
                 console.log('[Keycloak] Inicializado. Autenticado:', authenticated);
@@ -104,10 +115,19 @@ class AuthService {
 
     private async loginKeycloak(): Promise<User> {
         try {
-            // Asegurar que Keycloak esté inicializado antes de hacer login
-            if (!this.isInitialized) {
+            // Verificar si Keycloak ya fue inicializado (internamente o por nosotros)
+            // keycloak-js establece 'authenticated' (true/false) después de init()
+            // Si es undefined, significa que nunca se inicializó
+            const keycloakAlreadyInitialized = this.isInitialized ||
+                this.keycloakInstance.authenticated !== undefined;
+
+            if (!keycloakAlreadyInitialized) {
                 console.log('[Keycloak] Inicializando antes de login...');
                 await this.initKeycloakForLogin();
+            } else if (!this.isInitialized) {
+                // Marcar como inicializado si Keycloak ya lo estaba internamente
+                console.log('[Keycloak] Ya inicializado externamente');
+                this.isInitialized = true;
             }
 
             // Redirigir al login de Keycloak
@@ -129,7 +149,9 @@ class AuthService {
 
     // Inicialización específica para login (sin verificar el modo)
     private async initKeycloakForLogin(): Promise<boolean> {
-        if (this.isInitialized) {
+        // Verificar si ya está inicializado (por nosotros o internamente)
+        if (this.isInitialized || this.keycloakInstance.authenticated !== undefined) {
+            this.isInitialized = true;
             return this.keycloakInstance.authenticated || false;
         }
 
@@ -141,11 +163,17 @@ class AuthService {
             try {
                 console.log('[Keycloak] Iniciando para login...');
 
-                const authenticated = await this.keycloakInstance.init({
+                // Solo usar PKCE si estamos en contexto seguro (HTTPS o localhost)
+                const initOptions: Keycloak.KeycloakInitOptions = {
                     onLoad: 'check-sso',
                     checkLoginIframe: false,
-                    pkceMethod: 'S256',
-                });
+                };
+
+                if (this.isSecureContext()) {
+                    initOptions.pkceMethod = 'S256';
+                }
+
+                const authenticated = await this.keycloakInstance.init(initOptions);
 
                 this.isInitialized = true;
                 console.log('[Keycloak] Inicializado. Autenticado:', authenticated);
