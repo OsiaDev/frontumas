@@ -4,6 +4,7 @@ export type DroneStatus = 'ACTIVE' | 'IN_MAINTENANCE' | 'REPAIRING' | 'OUT_OF_SE
 
 export interface DroneResponseDTO {
     id: string;
+    name: string;
     vehicleId: string;
     model: string;
     description: string;
@@ -15,6 +16,7 @@ export interface DroneResponseDTO {
 }
 
 export interface CreateDroneDTO {
+    name: string;
     vehicleId: string;
     model: string;
     description: string;
@@ -23,6 +25,7 @@ export interface CreateDroneDTO {
 }
 
 export interface UpdateDroneDTO {
+    name?: string;
     vehicleId?: string;
     model?: string;
     description?: string;

@@ -115,6 +115,9 @@ export const DroneTable = () => {
                             <thead>
                                 <tr className="border-b border-gray-200 dark:border-[#004599]/30">
                                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">
+                                        Nombre
+                                    </th>
+                                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">
                                         ID Vehículo
                                     </th>
                                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">
@@ -144,6 +147,11 @@ export const DroneTable = () => {
                                             key={drone.id}
                                             className="border-b border-gray-100 dark:border-[#004599]/10 hover:bg-gray-50 dark:hover:bg-[#004599]/5 transition-colors"
                                         >
+                                            <td className="py-3 px-4">
+                                                <span className="text-sm text-gray-900 dark:text-white font-medium">
+                                                    {drone.name}
+                                                </span>
+                                            </td>
                                             <td className="py-3 px-4">
                                                 <div className="flex flex-col">
                                                     <span className="text-sm text-gray-900 dark:text-white font-medium">
