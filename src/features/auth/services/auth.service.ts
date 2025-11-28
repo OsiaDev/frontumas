@@ -104,6 +104,12 @@ class AuthService {
 
     private async loginKeycloak(): Promise<User> {
         try {
+            // Asegurar que Keycloak esté inicializado antes de hacer login
+            if (!this.isInitialized) {
+                console.log('[Keycloak] Inicializando antes de login...');
+                await this.initKeycloakForLogin();
+            }
+
             // Redirigir al login de Keycloak
             await this.keycloakInstance.login();
 
@@ -119,6 +125,45 @@ class AuthService {
             console.error('Error en login:', error);
             throw new Error('Error al iniciar sesión');
         }
+    }
+
+    // Inicialización específica para login (sin verificar el modo)
+    private async initKeycloakForLogin(): Promise<boolean> {
+        if (this.isInitialized) {
+            return this.keycloakInstance.authenticated || false;
+        }
+
+        if (this.initializationPromise) {
+            return this.initializationPromise;
+        }
+
+        this.initializationPromise = (async () => {
+            try {
+                console.log('[Keycloak] Iniciando para login...');
+
+                const authenticated = await this.keycloakInstance.init({
+                    onLoad: 'check-sso',
+                    checkLoginIframe: false,
+                    pkceMethod: 'S256',
+                });
+
+                this.isInitialized = true;
+                console.log('[Keycloak] Inicializado. Autenticado:', authenticated);
+
+                if (authenticated && this.keycloakInstance.token) {
+                    this.setupTokenRefresh();
+                }
+
+                return authenticated;
+            } catch (error) {
+                console.error('[Keycloak] Error al inicializar:', error);
+                this.isInitialized = false;
+                this.initializationPromise = null;
+                return false;
+            }
+        })();
+
+        return this.initializationPromise;
     }
 
     async logout(): Promise<void> {
