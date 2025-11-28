@@ -66,9 +66,15 @@ export const RouteMapPreview = ({ routeId, className = '' }: RouteMapPreviewProp
             setRoute(routeData);
 
             // Extraer coordenadas del GeoJSON
-            if (routeData.geojson && routeData.geojson.features) {
-                const coords = extractCoordinatesFromGeoJSON(routeData.geojson);
-                setCoordinates(coords);
+            if (routeData.geojson) {
+                const geojsonObj = typeof routeData.geojson === 'string'
+                    ? JSON.parse(routeData.geojson)
+                    : routeData.geojson;
+
+                if (geojsonObj && geojsonObj.features) {
+                    const coords = extractCoordinatesFromGeoJSON(geojsonObj);
+                    setCoordinates(coords);
+                }
             }
         } catch (err) {
             console.error('Error cargando ruta:', err);

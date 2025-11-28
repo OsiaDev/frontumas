@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useMissionStore } from '../store/useMissionStore';
 import { missionsApiService } from '../services/missions.api.service';
-import type { CreateMissionDTO, ApproveMissionDTO, ExecuteMissionDTO } from '@shared/types/mission.types';
+import type { CreateMissionDTO, ApproveMissionDTO, ExecuteMissionDTO, UpdateMissionDTO, MissionStatus } from '@shared/types/mission.types';
 
 export const useMissionsApi = () => {
     const {

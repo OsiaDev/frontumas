@@ -49,6 +49,16 @@ export interface ExecuteMissionDTO {
     commanderName: string;
 }
 
+export interface UpdateMissionDTO {
+    name?: string;
+    droneId?: string;
+    routeId?: string | null;
+    operatorId?: string;
+    startDate?: string;
+}
+
+export type MissionStatus = MissionState;
+
 export type MissionMap = Record<string, Mission>;
 
 // Información extendida para visualización

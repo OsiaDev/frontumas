@@ -1,6 +1,6 @@
 import type { ApiError } from '@shared/types/api.types';
 import { API_CONFIG, API_ROUTES } from '@core/config/api.config';
-import type { Mission, CreateMissionDTO, ApproveMissionDTO, ExecuteMissionDTO } from '@shared/types/mission.types';
+import type { Mission, CreateMissionDTO, ApproveMissionDTO, ExecuteMissionDTO, UpdateMissionDTO, MissionStatus } from '@shared/types/mission.types';
 
 class MissionsApiService {
     private baseUrl: string;
@@ -203,6 +203,93 @@ class MissionsApiService {
             }
         } catch (error) {
             console.error(`Error eliminando misión ${id}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Actualizar misión
+     */
+    async updateMission(id: string, data: UpdateMissionDTO): Promise<Mission> {
+        try {
+            const url = `${this.baseUrl}/api/v1/missions/${id}`;
+            const response = await this.fetchWithTimeout(url, {
+                method: 'PUT',
+                body: JSON.stringify(data),
+            });
+
+            return this.handleResponse<Mission>(response);
+        } catch (error) {
+            console.error(`Error actualizando misión ${id}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Actualizar estado de misión
+     */
+    async updateMissionStatus(id: string, status: MissionStatus): Promise<Mission> {
+        try {
+            const url = `${this.baseUrl}/api/v1/missions/${id}/status`;
+            const response = await this.fetchWithTimeout(url, {
+                method: 'PATCH',
+                body: JSON.stringify({ status }),
+            });
+
+            return this.handleResponse<Mission>(response);
+        } catch (error) {
+            console.error(`Error actualizando estado de misión ${id}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Iniciar misión
+     */
+    async startMission(id: string): Promise<Mission> {
+        try {
+            const url = `${this.baseUrl}/api/v1/missions/${id}/start`;
+            const response = await this.fetchWithTimeout(url, {
+                method: 'POST',
+            });
+
+            return this.handleResponse<Mission>(response);
+        } catch (error) {
+            console.error(`Error iniciando misión ${id}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Completar misión
+     */
+    async completeMission(id: string): Promise<Mission> {
+        try {
+            const url = `${this.baseUrl}/api/v1/missions/${id}/complete`;
+            const response = await this.fetchWithTimeout(url, {
+                method: 'POST',
+            });
+
+            return this.handleResponse<Mission>(response);
+        } catch (error) {
+            console.error(`Error completando misión ${id}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Cancelar misión
+     */
+    async cancelMission(id: string): Promise<Mission> {
+        try {
+            const url = `${this.baseUrl}/api/v1/missions/${id}/cancel`;
+            const response = await this.fetchWithTimeout(url, {
+                method: 'POST',
+            });
+
+            return this.handleResponse<Mission>(response);
+        } catch (error) {
+            console.error(`Error cancelando misión ${id}:`, error);
             throw error;
         }
     }
