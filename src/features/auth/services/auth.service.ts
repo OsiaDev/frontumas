@@ -130,8 +130,35 @@ class AuthService {
                 this.isInitialized = true;
             }
 
-            // Redirigir al login de Keycloak
-            await this.keycloakInstance.login();
+            // Verificar si estamos en contexto seguro (HTTPS o localhost)
+            // Si no, mostrar error explicativo porque PKCE requiere Web Crypto API
+            if (!this.isSecureContext()) {
+                console.warn('[Keycloak] No estamos en contexto seguro (HTTPS). Keycloak PKCE requiere Web Crypto API.');
+                console.warn('[Keycloak] Opciones: 1) Usar HTTPS, 2) Acceder via localhost, 3) Deshabilitar PKCE en Keycloak Admin Console');
+
+                // Intentar login sin PKCE usando redirect directo al endpoint de Keycloak
+                const keycloakUrl = 'http://192.168.246.10';
+                const realm = 'umas';
+                const clientId = 'commander';
+                const redirectUri = encodeURIComponent(window.location.origin + '/dashboard');
+
+                // Construir URL de autorización sin PKCE
+                const authUrl = `${keycloakUrl}/realms/${realm}/protocol/openid-connect/auth?` +
+                    `client_id=${clientId}&` +
+                    `redirect_uri=${redirectUri}&` +
+                    `response_type=code&` +
+                    `scope=openid`;
+
+                window.location.href = authUrl;
+
+                // Esta promesa nunca se resolverá porque redirigimos
+                return new Promise(() => {});
+            }
+
+            // Redirigir al login de Keycloak (contexto seguro - usa PKCE)
+            await this.keycloakInstance.login({
+                redirectUri: window.location.origin + '/dashboard',
+            });
 
             // Después del login, obtener datos del usuario
             const user = this.getUserFromKeycloak();
@@ -142,6 +169,14 @@ class AuthService {
 
             throw new Error('No se pudo obtener información del usuario');
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+
+            // Si el error es por Web Crypto API, dar instrucciones claras
+            if (errorMessage.includes('Web Crypto API')) {
+                console.error('[Keycloak] Web Crypto API no disponible. Debes acceder via HTTPS o localhost.');
+                throw new Error('Para usar Keycloak, accede via HTTPS o localhost. Alternativamente, deshabilita PKCE en la configuración del cliente Keycloak.');
+            }
+
             console.error('Error en login:', error);
             throw new Error('Error al iniciar sesión');
         }
@@ -184,6 +219,14 @@ class AuthService {
 
                 return authenticated;
             } catch (error) {
+                // Si el error es "ya inicializado", marcar como inicializado y continuar
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                if (errorMessage.includes('initialized once')) {
+                    console.log('[Keycloak] Ya estaba inicializado, continuando...');
+                    this.isInitialized = true;
+                    return this.keycloakInstance.authenticated || false;
+                }
+
                 console.error('[Keycloak] Error al inicializar:', error);
                 this.isInitialized = false;
                 this.initializationPromise = null;
