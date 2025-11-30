@@ -9,9 +9,10 @@ const DashboardPage = lazy(() => import('@features/tracking').then(m => ({ defau
 const DronesPage = lazy(() => import('@features/drones').then(m => ({ default: m.DronesPage })));
 const GeofencesPage = lazy(() => import('@features/geofences').then(m => ({ default: m.GeofencesPage })));
 const RoutesPage = lazy(() => import('@features/routes').then(m => ({ default: m.RoutesPage })));
-const MissionPage = lazy(() => import('@features/mission').then(m => ({ default: m.MissionPage })));
 const MissionsListPage = lazy(() => import('@features/missions').then(m => ({ default: m.MissionsListPage })));
 const MissionFormPage = lazy(() => import('@features/missions').then(m => ({ default: m.MissionFormPage })));
+const MissionControlPage = lazy(() => import('@features/mission').then(m => ({ default: m.MissionPage })));
+const MissionPlaybackPage = lazy(() => import('@features/mission').then(m => ({ default: m.MissionPlaybackPage })));
 const OperatorsPage = lazy(() => import('@features/operators').then(m => ({ default: m.OperatorsPage })));
 
 // Componente de carga
@@ -96,19 +97,6 @@ export const AppRouter = () => {
                 />
 
                 <Route
-                    path={ROUTES.MISSION}
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <Suspense fallback={<LoadingFallback />}>
-                                    <MissionPage />
-                                </Suspense>
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
                     path={ROUTES.OPERATORS}
                     element={
                         <ProtectedRoute>
@@ -155,6 +143,32 @@ export const AppRouter = () => {
                             <MainLayout>
                                 <Suspense fallback={<LoadingFallback />}>
                                     <MissionFormPage />
+                                </Suspense>
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path={ROUTES.MISSIONS_CONTROL}
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <Suspense fallback={<LoadingFallback />}>
+                                    <MissionControlPage />
+                                </Suspense>
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path={ROUTES.MISSIONS_PLAYBACK}
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <Suspense fallback={<LoadingFallback />}>
+                                    <MissionPlaybackPage />
                                 </Suspense>
                             </MainLayout>
                         </ProtectedRoute>
