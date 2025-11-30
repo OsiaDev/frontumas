@@ -85,7 +85,7 @@ export const MissionsListPage = () => {
     };
 
     const handleViewDetails = (mission: Mission) => {
-        navigate(`/missions/${mission.id}`);
+        navigate(`/missions/edit/${mission.id}`);
     };
 
     const missionsList = Object.values(missions);

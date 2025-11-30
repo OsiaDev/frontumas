@@ -13,32 +13,68 @@ export type MissionState =
 
 export type MissionOrigin = 'MANUAL' | 'AUTOMATICA';
 
+/**
+ * Información de un dron asignado a una misión
+ */
+export interface DroneAssignment {
+    assignmentId: string;
+    droneId: string;
+    droneName: string;
+    vehicleId: string;
+    model: string;
+    description: string;
+    serialNumber: string;
+    droneStatus: string;
+    flightHours: number;
+    droneCreatedAt: string;
+    droneUpdatedAt: string;
+    routeId: string | null;
+    hasRoute: boolean;
+}
+
+/**
+ * Misión con múltiples drones asignados
+ */
 export interface Mission {
     id: string;
-    name: string;
-    droneId: string;
-    routeId: string | null;
+    name: string | null;
     operatorId: string;
     missionType: MissionOrigin;
     state: MissionState;
-    startDate: string;
+    estimatedDate: string;
+    startDate: string | null;
+    endDate: string | null;
+    assignedDrones: DroneAssignment[];
     createdAt: string;
     updatedAt: string;
     // Campos calculados desde el backend
-    hasRoute: boolean;
     hasName: boolean;
     isScheduledForFuture: boolean;
     isManual: boolean;
     isPendingApproval: boolean;
+    isInProgress: boolean;
+    hasStarted: boolean;
+    hasEnded: boolean;
+    droneCount: number;
 }
 
-export interface CreateMissionDTO {
-    name: string;
+/**
+ * Request para asignar un dron a una misión
+ */
+export interface DroneAssignmentRequest {
     droneId: string;
-    routeId: string | null;
+    routeId?: string | null;
+}
+
+/**
+ * DTO para crear una misión
+ */
+export interface CreateMissionDTO {
+    name?: string | null;
     operatorId: string;
     commanderName: string;
-    startDate: string;
+    estimatedDate: string;
+    droneAssignments: DroneAssignmentRequest[];
 }
 
 export interface ApproveMissionDTO {
@@ -50,11 +86,11 @@ export interface ExecuteMissionDTO {
 }
 
 export interface UpdateMissionDTO {
-    name?: string;
-    droneId?: string;
-    routeId?: string | null;
+    name?: string | null;
     operatorId?: string;
-    startDate?: string;
+    commanderName?: string;
+    estimatedDate?: string;
+    droneAssignments?: DroneAssignmentRequest[];
 }
 
 export type MissionStatus = MissionState;
@@ -63,7 +99,15 @@ export type MissionMap = Record<string, Mission>;
 
 // Información extendida para visualización
 export interface MissionWithDetails extends Mission {
-    droneName?: string;
-    routeName?: string;
     operatorName?: string;
+}
+
+// Helper para obtener el primer dron (compatibilidad hacia atrás)
+export function getFirstDrone(mission: Mission): DroneAssignment | null {
+    return mission.assignedDrones.length > 0 ? mission.assignedDrones[0] : null;
+}
+
+// Helper para verificar si la misión tiene al menos un dron con ruta
+export function hasAnyRoute(mission: Mission): boolean {
+    return mission.assignedDrones.some(d => d.hasRoute);
 }

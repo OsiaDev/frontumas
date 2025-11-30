@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
 import { useMissionStore } from '../store/useMissionStore';
 import { useMissionsApi } from '../hooks/useMissionsApi';
 import { dronesApiService } from '@features/drones/services/drones.api.service';
 import { routesApiService } from '@features/routes/services/routes.api.service';
 import { operatorsApiService } from '@features/operators/services/operators.api.service';
 import { RouteMapPreview } from '../components/RouteMapPreview';
-import type { CreateMissionDTO } from '@shared/types/mission.types';
+import type { CreateMissionDTO, DroneAssignmentRequest } from '@shared/types/mission.types';
 import type { DroneResponseDTO, OperatorResponseDTO } from '@shared/types/api.types';
 import type { Route } from '@shared/types/route.types';
+
+interface DroneAssignmentFormData {
+    droneId: string;
+    routeId: string;
+}
 
 export const MissionFormPage = () => {
     const navigate = useNavigate();
@@ -21,13 +26,14 @@ export const MissionFormPage = () => {
 
     const [formData, setFormData] = useState({
         name: '',
-        description: '',
-        droneId: '',
-        routeId: '',
         operatorId: '',
         commanderName: '',
-        startDate: new Date().toISOString().slice(0, 16), // formato datetime-local
+        estimatedDate: new Date().toISOString().slice(0, 16),
     });
+
+    const [droneAssignments, setDroneAssignments] = useState<DroneAssignmentFormData[]>([
+        { droneId: '', routeId: '' }
+    ]);
 
     const [drones, setDrones] = useState<Array<{ id: string; name: string }>>([]);
     const [routes, setRoutes] = useState<Array<{ id: string; name: string }>>([]);
@@ -35,6 +41,7 @@ export const MissionFormPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
 
     useEffect(() => {
         loadInitialData();
@@ -45,7 +52,6 @@ export const MissionFormPage = () => {
         setError(null);
 
         try {
-            // Cargar drones, rutas y operadores
             const [dronesData, routesData, operatorsData] = await Promise.all([
                 dronesApiService.getDrones(),
                 routesApiService.getRoutes(),
@@ -56,20 +62,27 @@ export const MissionFormPage = () => {
             setRoutes(routesData.map((r: Route) => ({ id: r.id, name: r.name })));
             setOperators(operatorsData.map((o: OperatorResponseDTO) => ({ id: o.id, name: o.fullName })));
 
-            // Si es modo edición, cargar datos de la misión
             if (isEditMode && id) {
                 const mission = getMission(id) || await fetchMissionById(id);
 
                 if (mission) {
                     setFormData({
-                        name: mission.name,
-                        description: '',
-                        droneId: mission.droneId,
-                        routeId: mission.routeId || '',
+                        name: mission.name || '',
                         operatorId: mission.operatorId || '',
                         commanderName: '',
-                        startDate: new Date(mission.startDate).toISOString().slice(0, 16),
+                        estimatedDate: mission.estimatedDate
+                            ? new Date(mission.estimatedDate).toISOString().slice(0, 16)
+                            : new Date().toISOString().slice(0, 16),
                     });
+
+                    if (mission.assignedDrones && mission.assignedDrones.length > 0) {
+                        setDroneAssignments(
+                            mission.assignedDrones.map(d => ({
+                                droneId: d.droneId,
+                                routeId: d.routeId || '',
+                            }))
+                        );
+                    }
                 }
             }
         } catch (error) {
@@ -88,26 +101,49 @@ export const MissionFormPage = () => {
         }));
     };
 
+    const handleDroneAssignmentChange = (index: number, field: keyof DroneAssignmentFormData, value: string) => {
+        setDroneAssignments(prev => {
+            const updated = [...prev];
+            updated[index] = { ...updated[index], [field]: value };
+            return updated;
+        });
+
+        if (field === 'routeId' && value) {
+            setSelectedRouteId(value);
+        }
+    };
+
+    const addDroneAssignment = () => {
+        setDroneAssignments(prev => [...prev, { droneId: '', routeId: '' }]);
+    };
+
+    const removeDroneAssignment = (index: number) => {
+        if (droneAssignments.length > 1) {
+            setDroneAssignments(prev => prev.filter((_, i) => i !== index));
+        }
+    };
+
+    const getAvailableDrones = (currentIndex: number) => {
+        const selectedDroneIds = droneAssignments
+            .filter((_, i) => i !== currentIndex)
+            .map(a => a.droneId)
+            .filter(Boolean);
+
+        return drones.filter(d => !selectedDroneIds.includes(d.id));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!formData.name.trim()) {
-            setError('El nombre de la misión es requerido');
-            return;
-        }
+        const validAssignments = droneAssignments.filter(a => a.droneId);
 
-        if (!formData.droneId) {
-            setError('Debe seleccionar un dron');
-            return;
-        }
-
-        if (!formData.routeId) {
-            setError('Debe seleccionar una ruta');
+        if (validAssignments.length === 0) {
+            setError('Debe asignar al menos un dron a la misión');
             return;
         }
 
         if (!formData.operatorId) {
-            setError('Debe ingresar el ID del operador');
+            setError('Debe seleccionar un operador');
             return;
         }
 
@@ -120,13 +156,22 @@ export const MissionFormPage = () => {
         setError(null);
 
         try {
+            const droneAssignmentsDTO: DroneAssignmentRequest[] = validAssignments.map(a => ({
+                droneId: a.droneId,
+                routeId: a.routeId || null,
+            }));
+
+            // Formatear fecha con segundos (backend espera yyyy-MM-dd'T'HH:mm:ss)
+            const estimatedDateFormatted = formData.estimatedDate.length === 16
+                ? `${formData.estimatedDate}:00`
+                : formData.estimatedDate;
+
             const missionData: CreateMissionDTO = {
-                name: formData.name.trim(),
-                droneId: formData.droneId,
-                routeId: formData.routeId,
+                name: formData.name.trim() || null,
                 operatorId: formData.operatorId.trim(),
                 commanderName: formData.commanderName.trim(),
-                startDate: formData.startDate,
+                estimatedDate: estimatedDateFormatted,
+                droneAssignments: droneAssignmentsDTO,
             };
 
             if (isEditMode && id) {
@@ -183,7 +228,7 @@ export const MissionFormPage = () => {
                         {/* Nombre */}
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Nombre de la Misión *
+                                Nombre de la Misión
                             </label>
                             <input
                                 type="text"
@@ -191,80 +236,9 @@ export const MissionFormPage = () => {
                                 name="name"
                                 value={formData.name}
                                 onChange={handleInputChange}
-                                required
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
-                                placeholder="Ej: Misión de reconocimiento zona norte"
+                                placeholder="Ej: Misión de reconocimiento zona norte (opcional)"
                             />
-                        </div>
-
-                        {/* Descripción */}
-                        <div>
-                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Descripción
-                            </label>
-                            <textarea
-                                id="description"
-                                name="description"
-                                value={formData.description}
-                                onChange={handleInputChange}
-                                rows={3}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
-                                placeholder="Describe el objetivo de la misión..."
-                            />
-                        </div>
-
-                        {/* Dron */}
-                        <div>
-                            <label htmlFor="droneId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Dron Asignado *
-                            </label>
-                            <select
-                                id="droneId"
-                                name="droneId"
-                                value={formData.droneId}
-                                onChange={handleInputChange}
-                                required
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
-                            >
-                                <option value="">Seleccione un dron</option>
-                                {drones.map(drone => (
-                                    <option key={drone.id} value={drone.id}>
-                                        {drone.name}
-                                    </option>
-                                ))}
-                            </select>
-                            {drones.length === 0 && (
-                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                    No hay drones disponibles. Cree un dron primero.
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Ruta */}
-                        <div>
-                            <label htmlFor="routeId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Ruta de Vuelo *
-                            </label>
-                            <select
-                                id="routeId"
-                                name="routeId"
-                                value={formData.routeId}
-                                onChange={handleInputChange}
-                                required
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
-                            >
-                                <option value="">Seleccione una ruta</option>
-                                {routes.map(route => (
-                                    <option key={route.id} value={route.id}>
-                                        {route.name}
-                                    </option>
-                                ))}
-                            </select>
-                            {routes.length === 0 && (
-                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                    No hay rutas disponibles. Cargue una ruta KML primero.
-                                </p>
-                            )}
                         </div>
 
                         {/* Operador */}
@@ -287,11 +261,6 @@ export const MissionFormPage = () => {
                                     </option>
                                 ))}
                             </select>
-                            {operators.length === 0 && (
-                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                    No hay operadores disponibles. Cree un operador primero.
-                                </p>
-                            )}
                         </div>
 
                         {/* Nombre del Comandante */}
@@ -311,20 +280,92 @@ export const MissionFormPage = () => {
                             />
                         </div>
 
-                        {/* Fecha de Inicio */}
+                        {/* Fecha Estimada */}
                         <div>
-                            <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Fecha y Hora de Inicio *
+                            <label htmlFor="estimatedDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Fecha y Hora Estimada *
                             </label>
                             <input
                                 type="datetime-local"
-                                id="startDate"
-                                name="startDate"
-                                value={formData.startDate}
+                                id="estimatedDate"
+                                name="estimatedDate"
+                                value={formData.estimatedDate}
                                 onChange={handleInputChange}
                                 required
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
                             />
+                        </div>
+
+                        {/* Drones Asignados */}
+                        <div>
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Drones Asignados *
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={addDroneAssignment}
+                                    disabled={droneAssignments.length >= drones.length}
+                                    className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary hover:text-primary-dark disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <Plus className="w-3 h-3" />
+                                    Agregar dron
+                                </button>
+                            </div>
+
+                            <div className="space-y-3">
+                                {droneAssignments.map((assignment, index) => (
+                                    <div key={index} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                                Dron #{index + 1}
+                                            </span>
+                                            {droneAssignments.length > 1 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeDroneAssignment(index)}
+                                                    className="p-1 text-red-500 hover:text-red-700"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <select
+                                            value={assignment.droneId}
+                                            onChange={(e) => handleDroneAssignmentChange(index, 'droneId', e.target.value)}
+                                            required
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white text-sm"
+                                        >
+                                            <option value="">Seleccione un dron</option>
+                                            {getAvailableDrones(index).map(drone => (
+                                                <option key={drone.id} value={drone.id}>
+                                                    {drone.name}
+                                                </option>
+                                            ))}
+                                        </select>
+
+                                        <select
+                                            value={assignment.routeId}
+                                            onChange={(e) => handleDroneAssignmentChange(index, 'routeId', e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white text-sm"
+                                        >
+                                            <option value="">Sin ruta asignada</option>
+                                            {routes.map(route => (
+                                                <option key={route.id} value={route.id}>
+                                                    {route.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {drones.length === 0 && (
+                                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                    No hay drones disponibles. Cree un dron primero.
+                                </p>
+                            )}
                         </div>
 
                         {/* Botones */}
@@ -339,7 +380,7 @@ export const MissionFormPage = () => {
                             </button>
                             <button
                                 type="submit"
-                                disabled={isSaving || drones.length === 0 || routes.length === 0 || operators.length === 0}
+                                disabled={isSaving || drones.length === 0 || operators.length === 0}
                                 className="inline-flex items-center gap-2 px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <Save className="w-4 h-4" />
@@ -354,7 +395,7 @@ export const MissionFormPage = () => {
                 <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden" style={{ height: '600px' }}>
                     {!isLoading && (
                         <RouteMapPreview
-                            routeId={formData.routeId || null}
+                            routeId={selectedRouteId || droneAssignments[0]?.routeId || null}
                             className="h-full"
                         />
                     )}
