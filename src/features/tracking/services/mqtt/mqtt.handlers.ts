@@ -93,7 +93,7 @@ class MqttHandlers {
             typeof msg.altitude === 'number' &&
             typeof msg.speed === 'number' &&
             typeof msg.heading === 'number' &&
-            typeof msg.batteryLevel === 'number' &&
+            //typeof msg.batteryLevel === 'number' &&
             typeof msg.satelliteCount === 'number' &&
             typeof msg.timestamp === 'string'
         );
