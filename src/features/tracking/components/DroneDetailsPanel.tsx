@@ -74,19 +74,19 @@ export const DroneDetailsPanel = () => {
         {
             icon: Navigation,
             label: 'Velocidad',
-            value: `${lastLocation.speed.toFixed(1)} m/s`,
+            value: `${lastLocation.speed?.toFixed(1)} m/s`,
             color: 'text-purple-500',
         },
         {
             icon: Navigation,
             label: 'Rumbo',
-            value: `${lastLocation.heading.toFixed(0)}°`,
+            value: `${lastLocation.heading?.toFixed(0)}°`,
             color: 'text-indigo-500',
         },
         {
             icon: Satellite,
             label: 'Satélites',
-            value: lastLocation.satelliteCount.toString(),
+            value: lastLocation.satelliteCount?.toString(),
             color: 'text-teal-500',
         },
     ];
