@@ -11,6 +11,11 @@ class AuthService {
     private isInitialized = false;
     private initializationPromise: Promise<boolean> | null = null;
 
+    // Verificar si estamos en un contexto seguro (HTTPS o localhost)
+    private isSecureContext(): boolean {
+        return window.isSecureContext || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    }
+
     // Obtener el modo de autenticación actual
     getAuthMode(): AuthMode {
         return (localStorage.getItem(AUTH_MODE_KEY) as AuthMode) || 'traditional';
@@ -42,11 +47,17 @@ class AuthService {
             try {
                 console.log('[Keycloak] Iniciando...');
 
-                const authenticated = await this.keycloakInstance.init({
+                // Solo usar PKCE si estamos en contexto seguro (HTTPS o localhost)
+                const initOptions: Keycloak.KeycloakInitOptions = {
                     onLoad: 'check-sso',
                     checkLoginIframe: false, // Deshabilitar iframe check para evitar problemas de CORS
-                    pkceMethod: 'S256',
-                });
+                };
+
+                if (this.isSecureContext()) {
+                    initOptions.pkceMethod = 'S256';
+                }
+
+                const authenticated = await this.keycloakInstance.init(initOptions);
 
                 this.isInitialized = true;
                 console.log('[Keycloak] Inicializado. Autenticado:', authenticated);
@@ -104,7 +115,47 @@ class AuthService {
 
     private async loginKeycloak(): Promise<User> {
         try {
-            // Redirigir al login de Keycloak
+            // Verificar si Keycloak ya fue inicializado (internamente o por nosotros)
+            // keycloak-js establece 'authenticated' (true/false) después de init()
+            // Si es undefined, significa que nunca se inicializó
+            const keycloakAlreadyInitialized = this.isInitialized ||
+                this.keycloakInstance.authenticated !== undefined;
+
+            if (!keycloakAlreadyInitialized) {
+                console.log('[Keycloak] Inicializando antes de login...');
+                await this.initKeycloakForLogin();
+            } else if (!this.isInitialized) {
+                // Marcar como inicializado si Keycloak ya lo estaba internamente
+                console.log('[Keycloak] Ya inicializado externamente');
+                this.isInitialized = true;
+            }
+
+            // Verificar si estamos en contexto seguro (HTTPS o localhost)
+            // Si no, mostrar error explicativo porque PKCE requiere Web Crypto API
+            if (!this.isSecureContext()) {
+                console.warn('[Keycloak] No estamos en contexto seguro (HTTPS). Keycloak PKCE requiere Web Crypto API.');
+                console.warn('[Keycloak] Opciones: 1) Usar HTTPS, 2) Acceder via localhost, 3) Deshabilitar PKCE en Keycloak Admin Console');
+
+                // Intentar login sin PKCE usando redirect directo al endpoint de Keycloak
+                const keycloakUrl = 'http://192.168.246.10';
+                const realm = 'umas';
+                const clientId = 'commander';
+                const redirectUri = encodeURIComponent(window.location.origin + '/dashboard');
+
+                // Construir URL de autorización sin PKCE
+                const authUrl = `${keycloakUrl}/realms/${realm}/protocol/openid-connect/auth?` +
+                    `client_id=${clientId}&` +
+                    `redirect_uri=${redirectUri}&` +
+                    `response_type=code&` +
+                    `scope=openid`;
+
+                window.location.href = authUrl;
+
+                // Esta promesa nunca se resolverá porque redirigimos
+                return new Promise(() => {});
+            }
+
+            // Redirigir al login de Keycloak (contexto seguro - usa PKCE)
             await this.keycloakInstance.login();
 
             // Después del login, obtener datos del usuario
@@ -116,9 +167,72 @@ class AuthService {
 
             throw new Error('No se pudo obtener información del usuario');
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+
+            // Si el error es por Web Crypto API, dar instrucciones claras
+            if (errorMessage.includes('Web Crypto API')) {
+                console.error('[Keycloak] Web Crypto API no disponible. Debes acceder via HTTPS o localhost.');
+                throw new Error('Para usar Keycloak, accede via HTTPS o localhost. Alternativamente, deshabilita PKCE en la configuración del cliente Keycloak.');
+            }
+
             console.error('Error en login:', error);
             throw new Error('Error al iniciar sesión');
         }
+    }
+
+    // Inicialización específica para login (sin verificar el modo)
+    private async initKeycloakForLogin(): Promise<boolean> {
+        // Verificar si ya está inicializado (por nosotros o internamente)
+        if (this.isInitialized || this.keycloakInstance.authenticated !== undefined) {
+            this.isInitialized = true;
+            return this.keycloakInstance.authenticated || false;
+        }
+
+        if (this.initializationPromise) {
+            return this.initializationPromise;
+        }
+
+        this.initializationPromise = (async () => {
+            try {
+                console.log('[Keycloak] Iniciando para login...');
+
+                // Solo usar PKCE si estamos en contexto seguro (HTTPS o localhost)
+                const initOptions: Keycloak.KeycloakInitOptions = {
+                    onLoad: 'check-sso',
+                    checkLoginIframe: false,
+                };
+
+                if (this.isSecureContext()) {
+                    initOptions.pkceMethod = 'S256';
+                }
+
+                const authenticated = await this.keycloakInstance.init(initOptions);
+
+                this.isInitialized = true;
+                console.log('[Keycloak] Inicializado. Autenticado:', authenticated);
+
+                if (authenticated && this.keycloakInstance.token) {
+                    this.setupTokenRefresh();
+                }
+
+                return authenticated;
+            } catch (error) {
+                // Si el error es "ya inicializado", marcar como inicializado y continuar
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                if (errorMessage.includes('initialized once')) {
+                    console.log('[Keycloak] Ya estaba inicializado, continuando...');
+                    this.isInitialized = true;
+                    return this.keycloakInstance.authenticated || false;
+                }
+
+                console.error('[Keycloak] Error al inicializar:', error);
+                this.isInitialized = false;
+                this.initializationPromise = null;
+                return false;
+            }
+        })();
+
+        return this.initializationPromise;
     }
 
     async logout(): Promise<void> {

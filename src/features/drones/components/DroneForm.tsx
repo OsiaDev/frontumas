@@ -1,7 +1,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { Input } from '@shared/components/Input';
 import { Button } from '@shared/components/Button';
-import { Package, Hash, FileText, Barcode, Clock } from 'lucide-react';
+import { Package, Hash, FileText, Barcode, Clock, Tag } from 'lucide-react';
 import type { CreateDroneDTO, DroneResponseDTO } from '@shared/types/api.types';
 
 interface DroneFormProps {
@@ -13,6 +13,7 @@ interface DroneFormProps {
 }
 
 export const DroneForm = ({ initialData, onSubmit, onCancel, isLoading = false, mode }: DroneFormProps) => {
+    const [name, setName] = useState(initialData?.name || '');
     const [vehicleId, setVehicleId] = useState(initialData?.vehicleId || '');
     const [model, setModel] = useState(initialData?.model || '');
     const [description, setDescription] = useState(initialData?.description || '');
@@ -22,6 +23,7 @@ export const DroneForm = ({ initialData, onSubmit, onCancel, isLoading = false, 
 
     useEffect(() => {
         if (initialData) {
+            setName(initialData.name);
             setVehicleId(initialData.vehicleId);
             setModel(initialData.model);
             setDescription(initialData.description);
@@ -32,6 +34,10 @@ export const DroneForm = ({ initialData, onSubmit, onCancel, isLoading = false, 
 
     const validateForm = (): boolean => {
         const newErrors: Record<string, string> = {};
+
+        if (!name.trim()) {
+            newErrors.name = 'El nombre es requerido';
+        }
 
         if (!vehicleId.trim()) {
             newErrors.vehicleId = 'El ID del vehículo es requerido';
@@ -69,6 +75,7 @@ export const DroneForm = ({ initialData, onSubmit, onCancel, isLoading = false, 
         }
 
         const data: CreateDroneDTO = {
+            name: name.trim(),
             vehicleId: vehicleId.trim(),
             model: model.trim(),
             description: description.trim(),
@@ -91,6 +98,9 @@ export const DroneForm = ({ initialData, onSubmit, onCancel, isLoading = false, 
 
         // Actualizar el campo
         switch (field) {
+            case 'name':
+                setName(value);
+                break;
             case 'vehicleId':
                 setVehicleId(value);
                 break;
@@ -119,6 +129,17 @@ export const DroneForm = ({ initialData, onSubmit, onCancel, isLoading = false, 
                         Información Básica
                     </h3>
                 </div>
+
+                <Input
+                    label="Nombre"
+                    placeholder="Ej: Drone Alpha"
+                    value={name}
+                    onChange={(e) => handleFieldChange('name', e.target.value)}
+                    error={errors.name}
+                    disabled={isLoading}
+                    icon={<Tag size={18} />}
+                    required
+                />
 
                 <Input
                     label="ID del Vehículo"
