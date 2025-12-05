@@ -21,13 +21,14 @@ export interface DroneLocationMessage {
 
 export interface DroneGeoEventMessage {
     vehicleId: string;
-    eventType: 'ZONE_VIOLATION' | 'ZONE_EXIT' | 'RESTRICTED_AREA';
-    latitude: number;
-    longitude: number;
+    geofenceId: string;
+    geofenceName: string;
+    eventType: 'ENTRY' | 'EXIT';
     timestamp: string;
-    zoneId?: string;
-    zoneName?: string;
-    severity?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    coordinates: {
+        lat: number;
+        lng: number;
+    };
 }
 
 export interface DroneAlertMessage {
@@ -55,7 +56,7 @@ export type DroneMap = Record<string, DroneState>;
 // Topics MQTT disponibles
 export enum MqttTopics {
     LOCATION = 'drone/+/location',
-    GEO_EVENT = 'drone/+/geoevent',
+    GEO_EVENT = 'drone/+/geofence',
     ALERT = 'drone/+/alert',
 }
 
