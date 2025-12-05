@@ -298,7 +298,7 @@ export const MissionFormPage = () => {
 
                         {/* Drones Asignados */}
                         <div>
-                            <div className="flex items-center justify-between mb-2">
+                           {/* <div className="flex items-center justify-between mb-2">
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Drones Asignados *
                                 </label>
@@ -311,7 +311,7 @@ export const MissionFormPage = () => {
                                     <Plus className="w-3 h-3" />
                                     Agregar dron
                                 </button>
-                            </div>
+                            </div>*/}
 
                             <div className="space-y-3">
                                 {droneAssignments.map((assignment, index) => (

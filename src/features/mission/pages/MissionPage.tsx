@@ -169,6 +169,7 @@ export const MissionPage = () => {
                         {selectedDrone ? (
                             <DroneDetailPanel
                                 drone={selectedDrone}
+                                missionId={mission.id}
                                 onClose={handleCloseDroneDetail}
                             />
                         ) : (

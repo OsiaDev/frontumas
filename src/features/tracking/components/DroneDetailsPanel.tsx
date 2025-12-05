@@ -1,4 +1,5 @@
-import { Battery, Navigation, Gauge, Satellite, Clock, ThermometerSun, X } from 'lucide-react';
+import { Battery, Navigation, Gauge, Satellite, Clock, ThermometerSun, X, Home, PlaneLanding } from 'lucide-react';
+import { toast } from 'sonner';
 import { useTrackingStore } from '../store/useTrackingStore';
 import { useDroneStore } from '@features/drones';
 
@@ -205,6 +206,31 @@ export const DroneDetailsPanel = () => {
                         </div>
                     </div>
                 )}
+
+                {/* Control de Misión */}
+                <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                        Control de Misión
+                    </h4>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => toast.info('RTH solicitado', { description: `Enviando comando RTH a ${drone.vehicleId}` })}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium"
+                            title="Return To Home"
+                        >
+                            <Home className="w-4 h-4" />
+                            RTH
+                        </button>
+                        <button
+                            onClick={() => toast.warning('Aterrizaje solicitado', { description: `Enviando comando de aterrizaje a ${drone.vehicleId}` })}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors text-sm font-medium"
+                            title="Aterrizaje forzoso"
+                        >
+                            <PlaneLanding className="w-4 h-4" />
+                            Landing
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );

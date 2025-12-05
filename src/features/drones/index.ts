@@ -35,6 +35,7 @@ export {
 
 // Services
 export { dronesApiService } from './services/drones.api.service';
+export { missionCommandsService } from './services/drone-commands.service';
 
 // Types
 export type {

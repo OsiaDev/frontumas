@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup, Polyline, GeoJSON, useMap } from 'react-leaflet';
-import { Battery, Navigation, Clock, Compass, Signal, Route, X, Maximize2 } from 'lucide-react';
+import { Battery, Navigation, Clock, Compass, Signal, Route, X, Maximize2, Home, PlaneLanding, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import type { DroneAssignment } from '@shared/types/mission.types';
-import { useDroneStore } from '@features/drones';
+import { useDroneStore, missionCommandsService } from '@features/drones';
 import { routesApiService } from '@features/routes/services/routes.api.service';
 import { DEFAULT_CITY, MAP_TILE_CONFIG, MAP_ZOOM_CONFIG } from '@config/map.config';
 import type { Route as RouteType } from '@shared/types/route.types';
@@ -12,34 +13,86 @@ import 'leaflet/dist/leaflet.css';
 
 interface DroneDetailPanelProps {
     drone: DroneAssignment;
+    missionId: string;
     onClose: () => void;
 }
 
 interface MapCenterUpdaterProps {
-    center: LatLngExpression;
+    initialCenter: LatLngExpression;
     bounds?: LatLngBounds | null;
 }
 
-const MapUpdater = ({ center, bounds }: MapCenterUpdaterProps) => {
+const MapUpdater = ({ initialCenter, bounds }: MapCenterUpdaterProps) => {
     const map = useMap();
+    const hasInitializedRef = useRef(false);
+    const prevBoundsRef = useRef<LatLngBounds | null>(null);
 
     useEffect(() => {
-        if (bounds) {
-            map.fitBounds(bounds, { padding: [20, 20] });
-        } else {
-            map.setView(center, 15);
+        // Solo centrar en el primer render
+        if (!hasInitializedRef.current) {
+            if (bounds) {
+                map.fitBounds(bounds, { padding: [20, 20] });
+            } else {
+                map.setView(initialCenter, 15);
+            }
+            hasInitializedRef.current = true;
+            prevBoundsRef.current = bounds ?? null;
+            return;
         }
-    }, [center, bounds, map]);
+
+        // Solo re-centrar si los bounds de la ruta cambian (nueva ruta cargada)
+        if (bounds && prevBoundsRef.current !== bounds) {
+            map.fitBounds(bounds, { padding: [20, 20] });
+            prevBoundsRef.current = bounds;
+        }
+    }, [bounds, map, initialCenter]);
 
     return null;
 };
 
-export const DroneDetailPanel = ({ drone, onClose }: DroneDetailPanelProps) => {
+export const DroneDetailPanel = ({ drone, missionId, onClose }: DroneDetailPanelProps) => {
     const liveDrones = useDroneStore((state) => state.drones);
-    const liveDrone = liveDrones[drone.droneId];
+    // Buscar por vehicleId ya que es el identificador usado en los mensajes MQTT
+    const liveDrone = liveDrones[drone.vehicleId];
     const [route, setRoute] = useState<RouteType | null>(null);
     const [isLoadingRoute, setIsLoadingRoute] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
+    const [isRthLoading, setIsRthLoading] = useState(false);
+    const [isLandLoading, setIsLandLoading] = useState(false);
+
+    const handleReturnToHome = async () => {
+        setIsRthLoading(true);
+        try {
+            await missionCommandsService.returnToHome(missionId);
+            toast.success('RTH enviado', {
+                description: `Comando Return To Home enviado correctamente`,
+            });
+        } catch (error) {
+            console.error('Error sending RTH command:', error);
+            toast.error('Error al enviar RTH', {
+                description: 'No se pudo enviar el comando Return To Home',
+            });
+        } finally {
+            setIsRthLoading(false);
+        }
+    };
+
+    const handleLand = async () => {
+        setIsLandLoading(true);
+        try {
+            await missionCommandsService.land(missionId);
+            toast.success('Aterrizaje enviado', {
+                description: `Comando de aterrizaje enviado correctamente`,
+            });
+        } catch (error) {
+            console.error('Error sending land command:', error);
+            toast.error('Error al enviar aterrizaje', {
+                description: 'No se pudo enviar el comando de aterrizaje',
+            });
+        } finally {
+            setIsLandLoading(false);
+        }
+    };
 
     useEffect(() => {
         if (drone.routeId) {
@@ -181,7 +234,7 @@ export const DroneDetailPanel = ({ drone, onClose }: DroneDetailPanelProps) => {
                     className="w-full h-full"
                     zoomControl={true}
                 >
-                    <MapUpdater center={defaultCenter} bounds={routeBounds} />
+                    <MapUpdater initialCenter={defaultCenter} bounds={routeBounds} />
                     <TileLayer
                         url={MAP_TILE_CONFIG.url}
                         attribution={MAP_TILE_CONFIG.attribution}
@@ -253,13 +306,35 @@ export const DroneDetailPanel = ({ drone, onClose }: DroneDetailPanelProps) => {
 
             {/* Drone Details - Compact footer */}
             <div className="px-3 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex-shrink-0">
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center justify-between text-xs mb-2">
                     <span className="text-gray-500 dark:text-gray-400">
                         {drone.model} • {drone.serialNumber || drone.vehicleId}
                     </span>
                     <span className="text-gray-500 dark:text-gray-400">
                         {drone.flightHours?.toFixed(1) || '0'}h vuelo
                     </span>
+                </div>
+
+                {/* Control de Misión */}
+                <div className="flex gap-2">
+                    <button
+                        onClick={handleReturnToHome}
+                        disabled={isRthLoading || isLandLoading}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-400 disabled:cursor-not-allowed text-white rounded transition-colors text-xs font-medium"
+                        title="Return To Home"
+                    >
+                        {isRthLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Home className="w-3.5 h-3.5" />}
+                        RTH
+                    </button>
+                    <button
+                        onClick={handleLand}
+                        disabled={isRthLoading || isLandLoading}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-400 disabled:cursor-not-allowed text-white rounded transition-colors text-xs font-medium"
+                        title="Aterrizaje forzoso"
+                    >
+                        {isLandLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PlaneLanding className="w-3.5 h-3.5" />}
+                        Landing
+                    </button>
                 </div>
             </div>
         </div>
