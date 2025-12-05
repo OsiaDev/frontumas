@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Trash2 } from 'lucide-react';
 import { useMissionStore } from '../store/useMissionStore';
 import { useMissionsApi } from '../hooks/useMissionsApi';
 import { dronesApiService } from '@features/drones/services/drones.api.service';
@@ -111,10 +111,6 @@ export const MissionFormPage = () => {
         if (field === 'routeId' && value) {
             setSelectedRouteId(value);
         }
-    };
-
-    const addDroneAssignment = () => {
-        setDroneAssignments(prev => [...prev, { droneId: '', routeId: '' }]);
     };
 
     const removeDroneAssignment = (index: number) => {
