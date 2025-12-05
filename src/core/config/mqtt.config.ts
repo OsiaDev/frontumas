@@ -40,7 +40,7 @@ export const INITIAL_SUBSCRIPTIONS: TopicSubscription[] = [
     {
         topic: MqttTopics.GEO_EVENT,
         qos: 1,
-        enabled: false, // Deshabilitado por ahora
+        enabled: true,
     },
     {
         topic: MqttTopics.ALERT,

@@ -17,11 +17,13 @@ export { TrackingProvider } from './context/TrackingProvider';
 
 // Store (Zustand with localStorage)
 export { useTrackingStore } from './store/useTrackingStore';
+export { useGeofenceEventsStore } from './store/useGeofenceEventsStore';
 
 // Hooks
 export { useMqttConnection } from './hooks/useMqttConnection';
 export { useDroneLocations } from './hooks/useDroneLocations';
 export { useSmoothDronePosition } from './hooks/useSmoothDronePosition';
+export { useGeofenceEvents } from './hooks/useGeofenceEvents';
 export type { ConnectionStatus } from './hooks/useMqttConnection';
 
 // Services

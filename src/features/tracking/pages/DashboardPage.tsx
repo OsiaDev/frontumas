@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { DroneCompactList } from '../components/DroneCompactList';
 import { DroneTrackingMap } from '../components/DroneTrackingMap';
@@ -7,17 +7,48 @@ import { GeofenceList } from '../components/GeofenceList';
 import { MqttStatus } from '@features/drones';
 import { geofencesApiService } from '@features/geofences/services/geofences.api.service';
 import type { Geofence, GeofenceType } from '@shared/types/geofence.types';
+import { useGeofenceEvents } from '../hooks/useGeofenceEvents';
 
 export const NewDashboardPage = () => {
     const [geofences, setGeofences] = useState<Geofence[]>([]);
     const [geofenceTypes, setGeofenceTypes] = useState<GeofenceType[]>([]);
     const [visibleGeofences, setVisibleGeofences] = useState<Set<string>>(new Set());
     const [centerTarget, setCenterTarget] = useState<{ lat: number; lng: number; zoom?: number } | null>(null);
+    const lastProcessedCountRef = useRef(0);
+
+    const { latestEvent, totalEventsReceived } = useGeofenceEvents();
 
     useEffect(() => {
         fetchGeofences();
         fetchGeofenceTypes();
     }, []);
+
+    // Mostrar toast cuando llega un nuevo geo-evento
+    useEffect(() => {
+        // Solo procesar si hay un nuevo evento
+        if (!latestEvent || totalEventsReceived <= lastProcessedCountRef.current) {
+            return;
+        }
+
+        lastProcessedCountRef.current = totalEventsReceived;
+
+        const isEntry = latestEvent.eventType === 'ENTRY';
+        const message = isEntry
+            ? `${latestEvent.vehicleId} entró a ${latestEvent.geofenceName}`
+            : `${latestEvent.vehicleId} salió de ${latestEvent.geofenceName}`;
+
+        if (isEntry) {
+            toast.warning('Alerta de Geocerca', {
+                description: message,
+                duration: 8000,
+            });
+        } else {
+            toast.info('Evento de Geocerca', {
+                description: message,
+                duration: 5000,
+            });
+        }
+    }, [latestEvent, totalEventsReceived]);
 
     const fetchGeofences = async () => {
         try {

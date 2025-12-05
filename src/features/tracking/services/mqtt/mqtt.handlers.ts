@@ -23,7 +23,7 @@ class MqttHandlers {
             // Determinar el tipo de mensaje según el topic
             if (topic.includes('/location')) {
                 this.handleLocationMessage(message);
-            } else if (topic.includes('/geoevent')) {
+            } else if (topic.includes('/geofence')) {
                 this.handleGeoEventMessage(message);
             } else if (topic.includes('/alert')) {
                 this.handleAlertMessage(message);
@@ -54,7 +54,7 @@ class MqttHandlers {
             return;
         }
 
-        // this.log('Geo-evento recibido:', data.vehicleId, data.eventType);
+        console.log('[MQTT Handlers] Geo-evento recibido:', data.vehicleId, data.eventType, data.geofenceName);
         this.notifyGeoEventCallbacks(data);
     }
 
@@ -104,13 +104,18 @@ class MqttHandlers {
         if (typeof data !== 'object' || data === null) return false;
 
         const msg = data as Record<string, unknown>;
+        const coords = msg.coordinates as Record<string, unknown> | undefined;
 
         return (
             typeof msg.vehicleId === 'string' &&
+            typeof msg.geofenceId === 'string' &&
+            typeof msg.geofenceName === 'string' &&
             typeof msg.eventType === 'string' &&
-            typeof msg.latitude === 'number' &&
-            typeof msg.longitude === 'number' &&
-            typeof msg.timestamp === 'string'
+            typeof msg.timestamp === 'string' &&
+            typeof coords === 'object' &&
+            coords !== null &&
+            typeof coords.lat === 'number' &&
+            typeof coords.lng === 'number'
         );
     }
 
