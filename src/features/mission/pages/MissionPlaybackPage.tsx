@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Video, Clock, Calendar, Gauge, Navigation, Battery, Mountain } from 'lucide-react';
-import { PlaybackVideoPlayer } from '../components/PlaybackVideoPlayer';
-import { PlaybackMap } from '../components/PlaybackMap';
+import { PlaybackVideoPlayer } from '@/features/mission/components/PlaybackVideoPlayer';
+import { PlaybackMap } from '@/features/mission/components/PlaybackMap';
 import {
     usePlaybackTelemetry,
     extractTimestampFromFilename,

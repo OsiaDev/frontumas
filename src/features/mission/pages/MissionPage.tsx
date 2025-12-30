@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Target, Video, MapPin, Users, ArrowLeft } from 'lucide-react';
 import { MqttStatus } from '@/features/drones/components/MqttStatus';
-import { MissionDronesList } from '../components/MissionDronesList';
-import { DroneDetailPanel } from '../components/DroneDetailPanel';
-import { LiveVideoPlayer } from '../components/LiveVideoPlayer';
+import { MissionDronesList } from '@/features/mission/components/MissionDronesList';
+import { DroneDetailPanel } from '@/features/mission/components/DroneDetailPanel';
+import { LiveVideoPlayer } from '@/features/mission/components/LiveVideoPlayer';
 import { missionsApiService } from '@features/missions/services/missions.api.service';
 import type { Mission, DroneAssignment } from '@shared/types/mission.types';
 

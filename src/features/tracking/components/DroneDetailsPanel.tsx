@@ -1,7 +1,7 @@
 import { Battery, Navigation, Gauge, Satellite, Clock, ThermometerSun, X, Home, PlaneLanding } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTrackingStore } from '../store/useTrackingStore';
-import { useDroneStore } from '@features/drones';
+import { useTrackingStore } from '@features/tracking/store/useTrackingStore';
+import { useDroneStore } from '@features/drones/store/useDroneStore';
 
 export const DroneDetailsPanel = () => {
     const selectedDroneId = useTrackingStore((state) => state.selectedDroneId);

@@ -1,6 +1,8 @@
 export { MissionPage } from './pages/MissionPage';
 export { MissionPlaybackPage } from './pages/MissionPlaybackPage';
 export { LiveVideoPlayer } from './components/LiveVideoPlayer';
+export { DroneDetailPanel } from './components/DroneDetailPanel';
+export { MissionDronesList } from './components/MissionDronesList';
 export { PlaybackVideoPlayer } from './components/PlaybackVideoPlayer';
 export { PlaybackMap } from './components/PlaybackMap';
 export { MissionDroneMap } from './components/MissionDroneMap';

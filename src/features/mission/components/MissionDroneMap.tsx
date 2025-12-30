@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useDroneStore } from '@features/drones';
 import { MapPin, Navigation } from 'lucide-react';
 import { DEFAULT_CITY, MAP_TILE_CONFIG, MAP_ZOOM_CONFIG } from '@config/map.config';
-import { MissionTelemetry } from './MissionTelemetry';
+import { MissionTelemetry } from '@/features/mission/components/MissionTelemetry';
 import 'leaflet/dist/leaflet.css';
 import type { LatLngExpression } from 'leaflet';
 

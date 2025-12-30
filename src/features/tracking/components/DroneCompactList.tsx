@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Plane, RefreshCw, AlertCircle, Search } from 'lucide-react';
 import { useDronesApi, useDroneStore } from '@features/drones';
-import { useTrackingStore } from '../store/useTrackingStore';
+import { useTrackingStore } from '@features/tracking/store/useTrackingStore';
 import type { DroneStatus } from '@shared/types/api.types';
 import type { DroneResponseDTO } from '@shared/types/api.types';
 

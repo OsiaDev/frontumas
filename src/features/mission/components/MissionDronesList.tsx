@@ -1,6 +1,6 @@
 import { Plane, MapPin, Battery, Navigation, Clock, ChevronRight } from 'lucide-react';
 import type { Mission, DroneAssignment } from '@shared/types/mission.types';
-import { useDroneStore } from '@features/drones';
+import { useDroneStore } from '@features/drones/store/useDroneStore';
 
 interface MissionDronesListProps {
     mission: Mission;
