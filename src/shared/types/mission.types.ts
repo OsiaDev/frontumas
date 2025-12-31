@@ -64,6 +64,8 @@ export interface Mission {
 export interface DroneAssignmentRequest {
     droneId: string;
     routeId?: string | null;
+    safeAltitude?: number;
+    maxAltitude?: number;
 }
 
 /**
@@ -74,6 +76,7 @@ export interface CreateMissionDTO {
     operatorId: string;
     commanderName: string;
     estimatedDate: string;
+    isAutomatic?: boolean;
     droneAssignments: DroneAssignmentRequest[];
 }
 
@@ -90,6 +93,7 @@ export interface UpdateMissionDTO {
     operatorId?: string;
     commanderName?: string;
     estimatedDate?: string;
+    isAutomatic?: boolean;
     droneAssignments?: DroneAssignmentRequest[];
 }
 

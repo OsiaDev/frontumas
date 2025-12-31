@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, Trash2 } from 'lucide-react';
-import { useMissionStore } from '../store/useMissionStore';
-import { useMissionsApi } from '../hooks/useMissionsApi';
+import { useMissionStore } from '@features/missions/store/useMissionStore';
+import { useMissionsApi } from '@features/missions/hooks/useMissionsApi';
 import { dronesApiService } from '@features/drones/services/drones.api.service';
 import { routesApiService } from '@features/routes/services/routes.api.service';
 import { operatorsApiService } from '@features/operators/services/operators.api.service';
-import { RouteMapPreview } from '../components/RouteMapPreview';
+import { RouteMapPreview } from '@features/missions/components/RouteMapPreview';
 import type { CreateMissionDTO, DroneAssignmentRequest } from '@shared/types/mission.types';
 import type { DroneResponseDTO, OperatorResponseDTO } from '@shared/types/api.types';
 import type { Route } from '@shared/types/route.types';
@@ -14,6 +14,8 @@ import type { Route } from '@shared/types/route.types';
 interface DroneAssignmentFormData {
     droneId: string;
     routeId: string;
+    safeAltitude?: number;
+    maxAltitude?: number;
 }
 
 export const MissionFormPage = () => {
@@ -29,6 +31,7 @@ export const MissionFormPage = () => {
         operatorId: '',
         commanderName: '',
         estimatedDate: new Date().toISOString().slice(0, 16),
+        isAutomatic: false,
     });
 
     const [droneAssignments, setDroneAssignments] = useState<DroneAssignmentFormData[]>([

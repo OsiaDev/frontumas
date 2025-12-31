@@ -4,6 +4,7 @@ export { MissionFormPage } from './pages/MissionFormPage';
 
 // Components
 export { MissionTable } from './components/MissionTable';
+export { RouteMapPreview } from './components/RouteMapPreview';
 
 // Hooks
 export { useMissionsApi } from './hooks/useMissionsApi';
