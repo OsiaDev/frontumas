@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute, LoginPage } from '@features/auth';
 import { MainLayout } from '@shared/layout';
-import { ROUTES } from './routes';
+import { ROUTES } from '@/core/router/routes';
 
 // Lazy load de páginas para code splitting
 const DashboardPage = lazy(() => import('@features/tracking').then(m => ({ default: m.DashboardPage })));
