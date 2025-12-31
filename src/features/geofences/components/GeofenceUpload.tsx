@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Upload, X, FileText, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@shared/components/Button';
-import { geofencesApiService } from '../services/geofences.api.service';
+import { geofencesApiService } from '@features/geofences/services/geofences.api.service';
 import type { GeofenceType } from '@/shared/types/geofence.types';
 
 interface GeofenceUploadProps {

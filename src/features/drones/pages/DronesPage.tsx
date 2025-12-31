@@ -1,6 +1,6 @@
-import { MqttStatus } from '../components/MqttStatus';
-import { DroneStats } from '../components/DroneStats';
-import { DroneTable } from '../components/DroneTable';
+import { MqttStatus } from '@/features/drones/components/MqttStatus';
+import { DroneStats } from '@/features/drones/components/DroneStats';
+import { DroneTable } from '@/features/drones/components/DroneTable';
 
 export const DronesPage = () => {
     return (

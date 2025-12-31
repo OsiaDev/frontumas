@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@shared/components/Button';
-import { routesApiService } from '../services/routes.api.service';
+import { routesApiService } from '@features/routes/services/routes.api.service';
 import type { Route } from '@shared/types/route.types';
 
 interface RouteDeleteConfirmProps {

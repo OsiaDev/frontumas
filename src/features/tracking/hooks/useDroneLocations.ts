@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useDroneStore } from '@features/drones';
-import { useMqttConnection } from './useMqttConnection';
-import { mqttHandlers } from '../services/mqtt/mqtt.handlers';
+import { useMqttConnection } from '@/features/tracking/hooks/useMqttConnection';
+import { mqttHandlers } from '@/features/tracking/services/mqtt/mqtt.handlers';
 import type { DroneLocationMessage } from '@shared/types/drone.types';
 
 interface UseDroneLocationsReturn {

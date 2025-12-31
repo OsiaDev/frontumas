@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@shared/components/Button';
-import { geofencesApiService } from '../services/geofences.api.service';
+import { geofencesApiService } from '@features/geofences/services/geofences.api.service';
 import type { Geofence } from '@shared/types/geofence.types';
 
 interface GeofenceDeleteConfirmProps {

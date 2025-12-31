@@ -1,4 +1,4 @@
-import type { LoginCredentials, User } from '../types/auth.types';
+import type { LoginCredentials, User } from '@/features/auth/types/auth.types';
 import keycloak from '@config/keycloak.config';
 
 const USER_KEY = 'umas_user_data';

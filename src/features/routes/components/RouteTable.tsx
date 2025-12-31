@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Route as RouteIcon, Trash2, Loader2, Upload, FileText, Power, PowerOff } from 'lucide-react';
 import { toast } from 'sonner';
-import { useRoutesApi } from '../hooks/useRoutesApi';
-import { RouteUpload } from './RouteUpload';
-import { RouteDeleteConfirm } from './RouteDeleteConfirm';
-import { routesApiService } from '../services/routes.api.service';
+import { useRoutesApi } from '@features/routes/hooks/useRoutesApi';
+import { RouteUpload } from '@features/routes/components/RouteUpload';
+import { RouteDeleteConfirm } from '@features/routes/components/RouteDeleteConfirm';
+import { routesApiService } from '@features/routes/services/routes.api.service';
 import type { Route } from '@shared/types/route.types';
 
 const STATUS_COLORS: Record<string, string> = {

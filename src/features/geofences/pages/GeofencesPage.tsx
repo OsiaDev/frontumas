@@ -1,4 +1,4 @@
-import { GeofenceTable } from '../components/GeofenceTable';
+import { GeofenceTable } from '@features/geofences/components/GeofenceTable';
 
 export const GeofencesPage = () => {
     return (

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { dronesApiService } from '../services/drones.api.service';
+import { dronesApiService } from '@/features/drones/services/drones.api.service';
 import { QUERY_KEYS } from '@config/query.config';
 import type { CreateDroneDTO, UpdateDroneDTO, DroneStatus } from '@shared/types/api.types';
 

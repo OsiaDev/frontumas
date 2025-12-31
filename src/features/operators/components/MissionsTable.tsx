@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Target, Check, Clock, MapPin, Plane, User, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
-import type { Mission, MissionStatus, MissionIncident } from '../types/mission.types';
-import { FinalizeMissionModal } from './FinalizeMissionModal';
+import type { Mission, MissionStatus, MissionIncident } from '@features/operators/types/mission.types';
+import { FinalizeMissionModal } from '@features/operators/components/FinalizeMissionModal';
 
 interface MissionsTableProps {
     missions: Mission[];

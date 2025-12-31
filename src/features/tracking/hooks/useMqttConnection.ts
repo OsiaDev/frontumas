@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { mqttService } from '../services/mqtt/mqtt.service';
-import { mqttHandlers } from '../services/mqtt/mqtt.handlers';
+import { mqttService } from '@/features/tracking/services/mqtt/mqtt.service';
+import { mqttHandlers } from '@/features/tracking/services/mqtt/mqtt.handlers';
 import { INITIAL_SUBSCRIPTIONS } from '@config/mqtt.config';
 import type { MqttTopics } from '@shared/types/drone.types';
 

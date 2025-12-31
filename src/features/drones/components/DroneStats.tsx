@@ -1,5 +1,5 @@
 import { Plane, Activity, AlertTriangle, Battery } from 'lucide-react';
-import { useDroneStore } from '../store/useDroneStore';
+import { useDroneStore } from '@/features/drones/store/useDroneStore';
 
 export const DroneStats = () => {
     const getActiveDrones = useDroneStore((state) => state.getActiveDrones);

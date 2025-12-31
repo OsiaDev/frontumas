@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup, Polyline, useMap } from 'react-leaflet';
 import { Battery, Navigation, Clock, Compass, MapPin } from 'lucide-react';
 import { DEFAULT_CITY, MAP_TILE_CONFIG, MAP_ZOOM_CONFIG } from '@config/map.config';
-import type { TelemetryPoint } from '../hooks/usePlaybackTelemetry';
+import type { TelemetryPoint } from '@features/mission/hooks/usePlaybackTelemetry';
 import type { LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 

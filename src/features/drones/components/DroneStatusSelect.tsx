@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useUpdateDroneStatus, useDroneStatuses } from '../hooks/useDrones';
+import { useUpdateDroneStatus, useDroneStatuses } from '@/features/drones/hooks/useDrones';
 import type { DroneResponseDTO, DroneStatus } from '@shared/types/api.types';
 
 interface DroneStatusSelectProps {

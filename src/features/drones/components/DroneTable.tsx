@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Plane, Edit, Trash2, Plus, Loader2, Activity, Radio } from 'lucide-react';
-import { useDrones as useDronesQuery } from '../hooks/useDrones';
-import { useDroneStore } from '../store/useDroneStore';
-import { DroneCreateModal } from './DroneCreateModal';
-import { DroneEditModal } from './DroneEditModal';
-import { DroneDeleteConfirm } from './DroneDeleteConfirm';
-import { DroneStatusSelect } from './DroneStatusSelect';
+import { useDrones as useDronesQuery } from '@/features/drones/hooks/useDrones';
+import { useDroneStore } from '@/features/drones/store/useDroneStore';
+import { DroneCreateModal } from '@/features/drones/components/DroneCreateModal';
+import { DroneEditModal } from '@/features/drones/components/DroneEditModal';
+import { DroneDeleteConfirm } from '@/features/drones/components/DroneDeleteConfirm';
+import { DroneStatusSelect } from '@/features/drones/components/DroneStatusSelect';
 import type { DroneResponseDTO } from '@shared/types/api.types';
 
 export const DroneTable = () => {

@@ -1,4 +1,4 @@
-import { authService } from '../services/auth.service';
+import { authService } from '@/features/auth/services/auth.service';
 
 /**
  * Hook personalizado para obtener y validar roles del usuario

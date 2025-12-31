@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
-import { DroneForm } from './DroneForm';
-import { useUpdateDrone } from '../hooks/useDrones';
+import { DroneForm } from '@/features/drones/components/DroneForm';
+import { useUpdateDrone } from '@/features/drones/hooks/useDrones';
 import type { CreateDroneDTO, DroneResponseDTO } from '@shared/types/api.types';
 
 interface DroneEditModalProps {

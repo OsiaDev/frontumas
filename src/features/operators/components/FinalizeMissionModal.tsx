@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, Check, AlertTriangle, Plus, Trash2, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Mission, MissionIncident, IncidentSeverity } from '../types/mission.types';
+import type { Mission, MissionIncident, IncidentSeverity } from '@features/operators/types/mission.types';
 
 interface FinalizeMissionModalProps {
     isOpen: boolean;

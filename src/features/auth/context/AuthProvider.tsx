@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import type { AuthContextType, LoginCredentials, User } from '../types/auth.types';
-import { authService } from '../services/auth.service';
+import type { AuthContextType, LoginCredentials, User } from '@/features/auth/types/auth.types';
+import { authService } from '@/features/auth/services/auth.service';
 import AuthContext from './AuthContext';
 
 interface AuthProviderProps {

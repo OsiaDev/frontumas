@@ -1,8 +1,7 @@
-// src/components/auth/LoginForm.tsx
 import { useState } from 'react';
 import { Shield, User, Lock, LogIn } from 'lucide-react';
-import { authService, type AuthMode } from '../services/auth.service';
-import { useAuthStore } from '../store/useAuthStore';
+import { authService, type AuthMode } from '@/features/auth/services/auth.service';
+import { useAuthStore } from '@/features/auth/store/useAuthStore';
 import { toast } from 'sonner';
 
 export const LoginForm = () => {

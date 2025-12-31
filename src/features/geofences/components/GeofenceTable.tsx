@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { SquareDashed, Trash2, Loader2, Upload, FileText } from 'lucide-react';
-import { useGeofencesApi } from '../hooks/useGeofencesApi';
-import { GeofenceUpload } from './GeofenceUpload';
-import { GeofenceDeleteConfirm } from './GeofenceDeleteConfirm';
+import { useGeofencesApi } from '@features/geofences/hooks/useGeofencesApi';
+import { GeofenceUpload } from '@features/geofences/components/GeofenceUpload';
+import { GeofenceDeleteConfirm } from '@features/geofences/components/GeofenceDeleteConfirm';
 import type { Geofence } from '@shared/types/geofence.types';
 
 const TYPE_COLORS: Record<string, string> = {

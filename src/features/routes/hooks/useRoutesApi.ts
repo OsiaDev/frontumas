@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { routesApiService } from '../services/routes.api.service';
+import { routesApiService } from '@features/routes/services/routes.api.service';
 import type { ApiError } from '@shared/types/api.types';
 import type { Route } from '@/shared/types/route.types';
 

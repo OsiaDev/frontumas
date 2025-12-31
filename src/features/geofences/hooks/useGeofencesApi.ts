@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { geofencesApiService } from '../services/geofences.api.service';
+import { geofencesApiService } from '@features/geofences/services/geofences.api.service';
 import type { ApiError } from '@shared/types/api.types';
 import type { Geofence, GeofenceType } from '@/shared/types/geofence.types';
 

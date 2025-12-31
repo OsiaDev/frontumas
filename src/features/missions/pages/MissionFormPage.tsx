@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, Trash2 } from 'lucide-react';
+import { Toggle } from '@shared/components/ui/Toggle';
 import { useMissionStore } from '@features/missions/store/useMissionStore';
 import { useMissionsApi } from '@features/missions/hooks/useMissionsApi';
 import { dronesApiService } from '@features/drones/services/drones.api.service';
@@ -35,7 +36,7 @@ export const MissionFormPage = () => {
     });
 
     const [droneAssignments, setDroneAssignments] = useState<DroneAssignmentFormData[]>([
-        { droneId: '', routeId: '' }
+        { droneId: '', routeId: '', safeAltitude: 0, maxAltitude: 0 }
     ]);
 
     const [drones, setDrones] = useState<Array<{ id: string; name: string }>>([]);
@@ -73,6 +74,7 @@ export const MissionFormPage = () => {
                         name: mission.name || '',
                         operatorId: mission.operatorId || '',
                         commanderName: '',
+                        isAutomatic: mission.missionType === 'AUTOMATICA',
                         estimatedDate: mission.estimatedDate
                             ? new Date(mission.estimatedDate).toISOString().slice(0, 16)
                             : new Date().toISOString().slice(0, 16),
@@ -83,6 +85,8 @@ export const MissionFormPage = () => {
                             mission.assignedDrones.map(d => ({
                                 droneId: d.droneId,
                                 routeId: d.routeId || '',
+                                safeAltitude: 0,
+                                maxAltitude: 0,
                             }))
                         );
                     }
@@ -104,14 +108,23 @@ export const MissionFormPage = () => {
         }));
     };
 
-    const handleDroneAssignmentChange = (index: number, field: keyof DroneAssignmentFormData, value: string) => {
+    const handleDroneAssignmentChange = (
+        index: number,
+        field: keyof DroneAssignmentFormData,
+        value: string | number
+    ) => {
         setDroneAssignments(prev => {
             const updated = [...prev];
-            updated[index] = { ...updated[index], [field]: value };
+            updated[index] = {
+                ...updated[index],
+                [field]: field === 'safeAltitude' || field === 'maxAltitude'
+                    ? Number(value) || 0
+                    : value
+            };
             return updated;
         });
 
-        if (field === 'routeId' && value) {
+        if (field === 'routeId' && typeof value === 'string' && value) {
             setSelectedRouteId(value);
         }
     };
@@ -158,6 +171,8 @@ export const MissionFormPage = () => {
             const droneAssignmentsDTO: DroneAssignmentRequest[] = validAssignments.map(a => ({
                 droneId: a.droneId,
                 routeId: a.routeId || null,
+                safeAltitude: a.safeAltitude && a.safeAltitude > 0 ? a.safeAltitude : undefined,
+                maxAltitude: a.maxAltitude && a.maxAltitude > 0 ? a.maxAltitude : undefined,
             }));
 
             // Formatear fecha con segundos (backend espera yyyy-MM-dd'T'HH:mm:ss)
@@ -170,6 +185,7 @@ export const MissionFormPage = () => {
                 operatorId: formData.operatorId.trim(),
                 commanderName: formData.commanderName.trim(),
                 estimatedDate: estimatedDateFormatted,
+                isAutomatic: formData.isAutomatic,
                 droneAssignments: droneAssignmentsDTO,
             };
 
@@ -279,6 +295,20 @@ export const MissionFormPage = () => {
                             />
                         </div>
 
+                        {/* Tipo de Misión */}
+                        <div>
+                            <Toggle
+                                checked={formData.isAutomatic}
+                                onChange={(checked) => setFormData(prev => ({ ...prev, isAutomatic: checked }))}
+                                label="Tipo de Misión"
+                                description={
+                                    formData.isAutomatic
+                                        ? 'Misión automática - Se ejecutará sin intervención del operador'
+                                        : 'Misión manual - Requiere aprobación y control del operador'
+                                }
+                            />
+                        </div>
+
                         {/* Fecha Estimada */}
                         <div>
                             <label htmlFor="estimatedDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -356,6 +386,39 @@ export const MissionFormPage = () => {
                                                 </option>
                                             ))}
                                         </select>
+
+                                        {/* Campos de Altitud */}
+                                        <div className="grid grid-cols-2 gap-2 mt-2">
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                                    Altitud Segura (m)
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="1"
+                                                    value={assignment.safeAltitude || ''}
+                                                    onChange={(e) => handleDroneAssignmentChange(index, 'safeAltitude', e.target.value)}
+                                                    placeholder="0"
+                                                    className="w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                                    Altitud Máxima (m)
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="1"
+                                                    value={assignment.maxAltitude || ''}
+                                                    onChange={(e) => handleDroneAssignmentChange(index, 'maxAltitude', e.target.value)}
+                                                    placeholder="0"
+                                                    className="w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
+                                                />
+                                            </div>
+                                        </div>
+                                        
                                     </div>
                                 ))}
                             </div>

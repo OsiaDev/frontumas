@@ -1,5 +1,5 @@
 import { Plane, Battery, Signal } from 'lucide-react';
-import { useDroneStore } from '../store/useDroneStore';
+import { useDroneStore } from '@/features/drones/store/useDroneStore';
 
 export const DroneList = () => {
     const getActiveDrones = useDroneStore((state) => state.getActiveDrones);

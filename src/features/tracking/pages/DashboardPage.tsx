@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { DroneCompactList } from '@/features/tracking/components/DroneCompactList';
 import { DroneTrackingMap } from '@/features/tracking/components/DroneTrackingMap';
 import { DroneDetailsPanel } from '@/features/tracking/components/DroneDetailsPanel';
-import { GeofenceList } from '../components/GeofenceList';
+import { GeofenceList } from '@/features/tracking/components/GeofenceList';
 import { MqttStatus } from '@/features/drones/components/MqttStatus';
 import { geofencesApiService } from '@features/geofences/services/geofences.api.service';
 import type { Geofence, GeofenceType } from '@shared/types/geofence.types';

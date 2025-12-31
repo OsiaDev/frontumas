@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LoginForm } from '../components/LoginForm';
-import { useAuthStore, selectIsAuthenticated } from '../store/useAuthStore';
+import { LoginForm } from '@/features/auth/components/LoginForm';
+import { useAuthStore, selectIsAuthenticated } from '@/features/auth/store/useAuthStore';
 
 export const LoginPage = () => {
     const navigate = useNavigate();

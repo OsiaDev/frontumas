@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, RefreshCw } from 'lucide-react';
-import { useMissionStore } from '../store/useMissionStore';
-import { useMissionsApi } from '../hooks/useMissionsApi';
-import { MissionTable } from '../components/MissionTable';
+import { useMissionStore } from '@features/missions/store/useMissionStore';
+import { useMissionsApi } from '@features/missions/hooks/useMissionsApi';
+import { MissionTable } from '@features/missions/components/MissionTable';
 import type { Mission } from '@shared/types/mission.types';
 
 export const MissionsListPage = () => {

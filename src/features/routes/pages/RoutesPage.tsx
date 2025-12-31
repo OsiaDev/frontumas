@@ -1,4 +1,4 @@
-import { RouteTable } from '../components/RouteTable';
+import { RouteTable } from '@features/routes/components/RouteTable';
 
 export const RoutesPage = () => {
     return (

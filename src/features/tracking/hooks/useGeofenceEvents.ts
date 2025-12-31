@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { mqttHandlers } from '../services/mqtt/mqtt.handlers';
-import { useGeofenceEventsStore } from '../store/useGeofenceEventsStore';
+import { mqttHandlers } from '@/features/tracking/services/mqtt/mqtt.handlers';
+import { useGeofenceEventsStore } from '@/features/tracking/store/useGeofenceEventsStore';
 import type { DroneGeoEventMessage } from '@shared/types/drone.types';
 
 export const useGeofenceEvents = () => {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { dronesApiService } from '../services/drones.api.service';
+import { dronesApiService } from '@/features/drones/services/drones.api.service';
 import type { DroneResponseDTO, ApiError } from '@shared/types/api.types';
 
 interface UseDronesApiReturn {

@@ -8,7 +8,7 @@ import {
     extractTimestampFromFilename,
     extractVehicleIdFromFilename,
     TelemetryPoint
-} from '../hooks/usePlaybackTelemetry';
+} from '@features/mission/hooks/usePlaybackTelemetry';
 
 // Configuración temporal - En producción esto vendría de un API de grabaciones
 const RECORDINGS_BASE_URL = import.meta.env.VITE_MEDIAMTX_HLS_URL || 'http://localhost:8080';

@@ -1,15 +1,15 @@
 import { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { MapPin, Navigation } from 'lucide-react';
-import { useDroneStore } from '@features/drones';
-import { useTrackingStore } from '@/features';
-import { GeofenceLayer } from './GeofenceLayer';
-import { SmoothDroneMarker } from './SmoothDroneMarker';
+import { useDroneStore } from '@features/drones/store/useDroneStore.ts';
+import { useTrackingStore } from '@/features/tracking/store/useTrackingStore.ts';
+import { GeofenceLayer } from '@/features/tracking/components/GeofenceLayer';
+import { SmoothDroneMarker } from '@/features/tracking/components/SmoothDroneMarker';
 import { DEFAULT_CITY, MAP_TILE_CONFIG, MAP_ZOOM_CONFIG } from '@config/map.config';
 import 'leaflet/dist/leaflet.css';
 import type { LatLngExpression } from 'leaflet';
 import type { Geofence, GeofenceType } from '@shared/types/geofence.types';
-import type { Position } from '../hooks/useSmoothDronePosition';
+import type { Position } from '@/features/tracking/hooks/useSmoothDronePosition';
 
 interface MapMarker {
     vehicleId: string;

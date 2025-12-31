@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Target, CheckCircle, Clock, AlertCircle } from 'lucide-react';
-import { MissionsTable } from '../components/MissionsTable';
-import { mockMissions } from '../data/mockMissions';
-import type { Mission, MissionIncident } from '../types/mission.types';
+import { MissionsTable } from '@features/operators/components/MissionsTable';
+import { mockMissions } from '@features/operators/data/mockMissions';
+import type { Mission, MissionIncident } from '@features/operators/types/mission.types';
 
 export const OperatorsPage = () => {
     const [missions, setMissions] = useState<Mission[]>(mockMissions);

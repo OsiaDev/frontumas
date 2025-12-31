@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { CircleMarker, Polyline, Popup, useMap } from 'react-leaflet';
 import type { LatLngExpression } from 'leaflet';
-import { useSmoothDronePosition } from '../hooks/useSmoothDronePosition';
-import type { Position } from '../hooks/useSmoothDronePosition';
+import { useSmoothDronePosition } from '@/features/tracking/hooks/useSmoothDronePosition';
+import type { Position } from '@/features/tracking/hooks/useSmoothDronePosition';
 
 interface SmoothDroneMarkerProps {
     vehicleId: string;

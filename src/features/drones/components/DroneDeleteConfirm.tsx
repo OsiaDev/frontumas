@@ -1,7 +1,7 @@
 import { AlertTriangle, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@shared/components/Button';
-import { useDeleteDrone } from '../hooks/useDrones';
+import { useDeleteDrone } from '@/features/drones/hooks/useDrones';
 import type { DroneResponseDTO } from '@shared/types/api.types';
 
 interface DroneDeleteConfirmProps {
