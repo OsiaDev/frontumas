@@ -44,6 +44,7 @@ export interface Mission {
     estimatedDate: string;
     startDate: string | null;
     endDate: string | null;
+    isAutomatic: boolean;
     assignedDrones: DroneAssignment[];
     createdAt: string;
     updatedAt: string;

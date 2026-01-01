@@ -94,6 +94,9 @@ export const MissionTable = ({
                             Tipo
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Ejecución
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Estado
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -159,6 +162,17 @@ export const MissionTable = ({
                                             : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
                                     }`}>
                                         {mission.missionType === 'MANUAL' ? 'Manual' : 'Automática'}
+                                    </span>
+                                </td>
+
+                                {/* Ejecución */}
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                        mission.isAutomatic
+                                            ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400'
+                                            : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+                                    }`}>
+                                        {mission.isAutomatic ? 'Manual' : 'Automática'}
                                     </span>
                                 </td>
 
