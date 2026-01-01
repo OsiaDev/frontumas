@@ -4,7 +4,7 @@ import Keycloak from 'keycloak-js';
 const keycloak = new Keycloak({
     url: 'http://192.168.246.10',
     realm: 'umas',
-    clientId: 'commander'
+    clientId: 'umas-web'
 });
 
 export default keycloak;
