@@ -9,7 +9,7 @@ class ApiService {
 
     constructor() {
         this.api = axios.create({
-            baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
+            baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
             timeout: 30000,
             headers: {
                 'Content-Type': 'application/json',
@@ -93,6 +93,22 @@ class ApiService {
         const response = await this.api.patch<T>(url, data, config);
         return response.data;
     }
+
+    /**
+     * Upload de archivos con FormData
+     * Axios maneja automáticamente el Content-Type para multipart/form-data
+     */
+    async uploadFile<T>(url: string, formData: FormData, config?: AxiosRequestConfig): Promise<T> {
+        const response = await this.api.post<T>(url, formData, {
+            ...config,
+            headers: {
+                // No establecer Content-Type - Axios lo hace automáticamente
+                ...config?.headers,
+            },
+        });
+        return response.data;
+    }
+
 }
 
 export const apiService = new ApiService();

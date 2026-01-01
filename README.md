@@ -107,7 +107,6 @@ Crear archivo `.env` en la raíz:
 ```env
 # API
 VITE_API_BASE_URL=http://localhost:8080
-VITE_API_URL=http://localhost:8080/api
 
 # Keycloak (futuro)
 VITE_KEYCLOAK_URL=http://localhost:8080/auth

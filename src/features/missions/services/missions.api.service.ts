@@ -1,64 +1,11 @@
-import type { ApiError } from '@shared/types/api.types';
-import { API_CONFIG, API_ROUTES } from '@core/config/api.config';
+import { API_ROUTES } from '@core/config/api.config';
 import type { Mission, CreateMissionDTO, ApproveMissionDTO, ExecuteMissionDTO, UpdateMissionDTO, MissionStatus } from '@shared/types/mission.types';
+import {apiService} from "@shared/services/api.service.ts";
 
 class MissionsApiService {
-    private baseUrl: string;
-    private timeout: number;
-
-    constructor() {
-        this.baseUrl = API_CONFIG.BASE_URL;
-        this.timeout = API_CONFIG.TIMEOUT;
-    }
-
-    private async fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-
-        try {
-            const response = await fetch(url, {
-                ...options,
-                signal: controller.signal,
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...options.headers,
-                },
-            });
-
-            clearTimeout(timeoutId);
-            return response;
-        } catch (error) {
-            clearTimeout(timeoutId);
-            throw error;
-        }
-    }
-
-    private async handleResponse<T>(response: Response): Promise<T> {
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({
-                message: 'Error desconocido',
-            }));
-
-            const error: ApiError = {
-                message: errorData.message || `HTTP ${response.status}`,
-                code: response.status.toString(),
-                details: errorData,
-            };
-
-            throw error;
-        }
-
-        return response.json();
-    }
-
     async getMissions(): Promise<Mission[]> {
         try {
-            const url = `${this.baseUrl}${API_ROUTES.MISSIONS.LIST}`;
-            const response = await this.fetchWithTimeout(url, {
-                method: 'GET',
-            });
-
-            return this.handleResponse<Mission[]>(response);
+            return await apiService.get<Mission[]>(API_ROUTES.MISSIONS.LIST);
         } catch (error) {
             console.error('Error obteniendo misiones:', error);
             throw error;
@@ -67,12 +14,7 @@ class MissionsApiService {
 
     async getMissionById(id: string): Promise<Mission> {
         try {
-            const url = `${this.baseUrl}${API_ROUTES.MISSIONS.GET_BY_ID(id)}`;
-            const response = await this.fetchWithTimeout(url, {
-                method: 'GET',
-            });
-
-            return this.handleResponse<Mission>(response);
+            return await apiService.get<Mission>(API_ROUTES.MISSIONS.GET_BY_ID(id));
         } catch (error) {
             console.error(`Error obteniendo misión ${id}:`, error);
             throw error;
@@ -81,218 +23,114 @@ class MissionsApiService {
 
     async createMission(data: CreateMissionDTO): Promise<Mission> {
         try {
-            const url = `${this.baseUrl}${API_ROUTES.MISSIONS.CREATE}`;
-            const response = await this.fetchWithTimeout(url, {
-                method: 'POST',
-                body: JSON.stringify(data),
-            });
-
-            return this.handleResponse<Mission>(response);
+            return await apiService.post<Mission>(API_ROUTES.MISSIONS.CREATE, data);
         } catch (error) {
             console.error('Error creando misión:', error);
             throw error;
         }
     }
 
-    /**
-     * Obtener misiones autorizadas (manuales)
-     */
     async getAuthorizedMissions(): Promise<Mission[]> {
         try {
-            const url = `${this.baseUrl}${API_ROUTES.MISSIONS.AUTHORIZED}`;
-            const response = await this.fetchWithTimeout(url, {
-                method: 'GET',
-            });
-
-            return this.handleResponse<Mission[]>(response);
+            return await apiService.get<Mission[]>(API_ROUTES.MISSIONS.AUTHORIZED);
         } catch (error) {
             console.error('Error obteniendo misiones autorizadas:', error);
             throw error;
         }
     }
 
-    /**
-     * Obtener misiones no autorizadas (automáticas)
-     */
     async getUnauthorizedMissions(): Promise<Mission[]> {
         try {
-            const url = `${this.baseUrl}${API_ROUTES.MISSIONS.UNAUTHORIZED}`;
-            const response = await this.fetchWithTimeout(url, {
-                method: 'GET',
-            });
-
-            return this.handleResponse<Mission[]>(response);
+            return await apiService.get<Mission[]>(API_ROUTES.MISSIONS.UNAUTHORIZED);
         } catch (error) {
             console.error('Error obteniendo misiones no autorizadas:', error);
             throw error;
         }
     }
 
-    /**
-     * Aprobar misión
-     */
     async approveMission(id: string, data: ApproveMissionDTO): Promise<Mission> {
         try {
-            const url = `${this.baseUrl}${API_ROUTES.MISSIONS.APPROVE(id)}`;
-            const response = await this.fetchWithTimeout(url, {
-                method: 'POST',
-                body: JSON.stringify(data),
-            });
-
-            return this.handleResponse<Mission>(response);
+            return await apiService.post<Mission>(API_ROUTES.MISSIONS.APPROVE(id), data);
         } catch (error) {
             console.error(`Error aprobando misión ${id}:`, error);
             throw error;
         }
     }
 
-    /**
-     * Ejecutar misión
-     */
     async executeMission(id: string, data: ExecuteMissionDTO): Promise<Mission> {
         try {
-            const url = `${this.baseUrl}${API_ROUTES.MISSIONS.EXECUTE(id)}`;
-            const response = await this.fetchWithTimeout(url, {
-                method: 'POST',
-                body: JSON.stringify(data),
-            });
-
-            return this.handleResponse<Mission>(response);
+            return await apiService.post<Mission>(API_ROUTES.MISSIONS.EXECUTE(id), data);
         } catch (error) {
             console.error(`Error ejecutando misión ${id}:`, error);
             throw error;
         }
     }
 
-    /**
-     * Verificar health del servicio
-     */
-    async checkHealth(): Promise<{ status: string; message: string }> {
-        try {
-            const url = `${this.baseUrl}${API_ROUTES.MISSIONS.HEALTH}`;
-            const response = await this.fetchWithTimeout(url, {
-                method: 'GET',
-            });
-
-            return this.handleResponse<{ status: string; message: string }>(response);
-        } catch (error) {
-            console.error('Error verificando health de misiones:', error);
-            throw error;
-        }
-    }
-
-    async deleteMission(id: string): Promise<void> {
-        try {
-            const url = `${this.baseUrl}${API_ROUTES.MISSIONS.DELETE(id)}`;
-            const response = await this.fetchWithTimeout(url, {
-                method: 'DELETE',
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({
-                    message: 'Error desconocido',
-                }));
-
-                const error: ApiError = {
-                    message: errorData.message || `HTTP ${response.status}`,
-                    code: response.status.toString(),
-                    details: errorData,
-                };
-
-                throw error;
-            }
-        } catch (error) {
-            console.error(`Error eliminando misión ${id}:`, error);
-            throw error;
-        }
-    }
-
-    /**
-     * Actualizar misión
-     */
     async updateMission(id: string, data: UpdateMissionDTO): Promise<Mission> {
         try {
-            const url = `${this.baseUrl}/api/v1/missions/${id}`;
-            const response = await this.fetchWithTimeout(url, {
-                method: 'PUT',
-                body: JSON.stringify(data),
-            });
-
-            return this.handleResponse<Mission>(response);
+            return await apiService.put<Mission>(`v1/missions/${id}`, data);
         } catch (error) {
             console.error(`Error actualizando misión ${id}:`, error);
             throw error;
         }
     }
 
-    /**
-     * Actualizar estado de misión
-     */
     async updateMissionStatus(id: string, status: MissionStatus): Promise<Mission> {
         try {
-            const url = `${this.baseUrl}/api/v1/missions/${id}/status`;
-            const response = await this.fetchWithTimeout(url, {
-                method: 'PATCH',
-                body: JSON.stringify({ status }),
-            });
-
-            return this.handleResponse<Mission>(response);
+            return await apiService.patch<Mission>(`v1/missions/${id}/status`, { status });
         } catch (error) {
             console.error(`Error actualizando estado de misión ${id}:`, error);
             throw error;
         }
     }
 
-    /**
-     * Iniciar misión
-     */
+    async deleteMission(id: string): Promise<void> {
+        try {
+            await apiService.delete(API_ROUTES.MISSIONS.DELETE(id));
+        } catch (error) {
+            console.error(`Error eliminando misión ${id}:`, error);
+            throw error;
+        }
+    }
+
+    async checkHealth(): Promise<{ status: string; message: string }> {
+        try {
+            return await apiService.get<{ status: string; message: string }>(
+                API_ROUTES.MISSIONS.HEALTH
+            );
+        } catch (error) {
+            console.error('Error verificando health de misiones:', error);
+            throw error;
+        }
+    }
+
     async startMission(id: string): Promise<Mission> {
         try {
-            const url = `${this.baseUrl}/api/v1/missions/${id}/start`;
-            const response = await this.fetchWithTimeout(url, {
-                method: 'POST',
-            });
-
-            return this.handleResponse<Mission>(response);
+            return await apiService.post<Mission>(`v1/missions/${id}/start`);
         } catch (error) {
             console.error(`Error iniciando misión ${id}:`, error);
             throw error;
         }
     }
 
-    /**
-     * Completar misión
-     */
     async completeMission(id: string): Promise<Mission> {
         try {
-            const url = `${this.baseUrl}/api/v1/missions/${id}/complete`;
-            const response = await this.fetchWithTimeout(url, {
-                method: 'POST',
-            });
-
-            return this.handleResponse<Mission>(response);
+            return await apiService.post<Mission>(`v1/missions/${id}/complete`);
         } catch (error) {
             console.error(`Error completando misión ${id}:`, error);
             throw error;
         }
     }
 
-    /**
-     * Cancelar misión
-     */
     async cancelMission(id: string): Promise<Mission> {
         try {
-            const url = `${this.baseUrl}/api/v1/missions/${id}/cancel`;
-            const response = await this.fetchWithTimeout(url, {
-                method: 'POST',
-            });
-
-            return this.handleResponse<Mission>(response);
+            return await apiService.post<Mission>(`v1/missions/${id}/cancel`);
         } catch (error) {
             console.error(`Error cancelando misión ${id}:`, error);
             throw error;
         }
     }
+
 }
 
 export const missionsApiService = new MissionsApiService();
