@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, RefreshCw } from 'lucide-react';
 import { useMissionStore } from '@features/missions/store/useMissionStore';
 import { useMissionsApi } from '@features/missions/hooks/useMissionsApi';
+import { useAuthStore } from '@features/auth/store/useAuthStore';
 import { MissionTable } from '@features/missions/components/MissionTable';
 import type { Mission } from '@shared/types/mission.types';
 
 export const MissionsListPage = () => {
     const navigate = useNavigate();
     const { missions, isLoading, error } = useMissionStore();
+    const { user } = useAuthStore();
     const {
         fetchMissions,
         deleteMission,
@@ -17,6 +19,9 @@ export const MissionsListPage = () => {
     } = useMissionsApi();
 
     const [isRefreshing, setIsRefreshing] = useState(false);
+
+    // Obtener el nombre del comandante del usuario autenticado
+    const commanderName = user?.username || 'Comandante';
 
     useEffect(() => {
         loadMissions();
@@ -53,14 +58,12 @@ export const MissionsListPage = () => {
     };
 
     const handleApprove = async (mission: Mission) => {
-        const commanderName = prompt(`Aprobar misión "${mission.name}"\n\nIngrese el nombre del comandante:`);
-
-        if (!commanderName || !commanderName.trim()) {
+        if (!window.confirm(`¿Aprobar misión "${mission.name}"?\n\nComandante: ${commanderName}`)) {
             return;
         }
 
         try {
-            await approveMission(mission.id, { commanderName: commanderName.trim() });
+            await approveMission(mission.id, { commanderName });
             alert(`Misión "${mission.name}" aprobada exitosamente.`);
         } catch (error) {
             console.error('Error al aprobar misión:', error);
@@ -69,14 +72,12 @@ export const MissionsListPage = () => {
     };
 
     const handleExecute = async (mission: Mission) => {
-        const commanderName = prompt(`Ejecutar misión "${mission.name}"\n\nIngrese el nombre del comandante:`);
-
-        if (!commanderName || !commanderName.trim()) {
+        if (!window.confirm(`¿Ejecutar misión "${mission.name}"?\n\nComandante: ${commanderName}`)) {
             return;
         }
 
         try {
-            await executeMission(mission.id, { commanderName: commanderName.trim() });
+            await executeMission(mission.id, { commanderName });
             alert(`Misión "${mission.name}" ejecutada exitosamente.`);
         } catch (error) {
             console.error('Error al ejecutar misión:', error);
