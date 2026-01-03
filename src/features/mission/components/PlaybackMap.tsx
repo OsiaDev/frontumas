@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup, Polyline, useMap } from 'react-leaflet';
+import { useEffect, useState, useMemo } from 'react';
+import { MapContainer, TileLayer, CircleMarker, Popup, Polyline, GeoJSON, useMap } from 'react-leaflet';
 import { Battery, Navigation, Clock, Compass, MapPin } from 'lucide-react';
 import { DEFAULT_CITY, MAP_TILE_CONFIG, MAP_ZOOM_CONFIG } from '@config/map.config';
 import type { TelemetryPoint } from '@features/mission/hooks/usePlaybackTelemetry';
+import type { Route } from '@shared/types/route.types';
 import type { LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -11,6 +12,7 @@ interface PlaybackMapProps {
     telemetryHistory: TelemetryPoint[];
     vehicleId: string;
     showTrail?: boolean;
+    route?: Route | null;
 }
 
 interface MapCenterUpdaterProps {
@@ -34,9 +36,21 @@ export const PlaybackMap = ({
     currentTelemetry,
     telemetryHistory,
     vehicleId,
-    showTrail = true
+    showTrail = true,
+    route
 }: PlaybackMapProps) => {
     const [followDrone, setFollowDrone] = useState(true);
+
+    // Parsear GeoJSON de la ruta
+    const routeGeoJson = useMemo(() => {
+        if (!route?.geojson) return null;
+        try {
+            return JSON.parse(route.geojson);
+        } catch (e) {
+            console.error('Error parsing route GeoJSON:', e);
+            return null;
+        }
+    }, [route]);
 
     const currentPosition: LatLngExpression = currentTelemetry
         ? [currentTelemetry.latitude, currentTelemetry.longitude]
@@ -143,14 +157,28 @@ export const PlaybackMap = ({
                         maxZoom={MAP_TILE_CONFIG.maxZoom}
                     />
 
-                    {/* Trail de posiciones */}
+                    {/* Ruta planificada (GeoJSON) */}
+                    {routeGeoJson && (
+                        <GeoJSON
+                            key={route?.id}
+                            data={routeGeoJson}
+                            style={{
+                                color: '#10b981',
+                                weight: 4,
+                                opacity: 0.6,
+                                dashArray: '10, 5',
+                            }}
+                        />
+                    )}
+
+                    {/* Trail de posiciones (ruta real recorrida) */}
                     {showTrail && trailPositions.length > 1 && (
                         <Polyline
                             positions={trailPositions}
                             pathOptions={{
                                 color: '#3b82f6',
                                 weight: 3,
-                                opacity: 0.7,
+                                opacity: 0.8,
                             }}
                         />
                     )}

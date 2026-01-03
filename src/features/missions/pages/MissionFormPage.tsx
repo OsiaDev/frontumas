@@ -36,7 +36,7 @@ export const MissionFormPage = () => {
     });
 
     const [droneAssignments, setDroneAssignments] = useState<DroneAssignmentFormData[]>([
-        { droneId: '', routeId: '', safeAltitude: 0, maxAltitude: 0 }
+        { droneId: '', routeId: '', safeAltitude: 50, maxAltitude: 100 }
     ]);
 
     const [drones, setDrones] = useState<Array<{ id: string; name: string }>>([]);
@@ -85,8 +85,8 @@ export const MissionFormPage = () => {
                             mission.assignedDrones.map(d => ({
                                 droneId: d.droneId,
                                 routeId: d.routeId || '',
-                                safeAltitude: 0,
-                                maxAltitude: 0,
+                                safeAltitude: 50,
+                                maxAltitude: 100,
                             }))
                         );
                     }
