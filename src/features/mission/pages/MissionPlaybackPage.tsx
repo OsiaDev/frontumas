@@ -12,8 +12,8 @@ import { routesApiService } from '@features/routes/services/routes.api.service';
 import type { Mission } from '@shared/types/mission.types';
 import type { Route } from '@shared/types/route.types';
 
-// URL base para videos grabados por misión
-const RECORDINGS_BASE_URL = import.meta.env.VITE_MEDIAMTX_HLS_URL || 'http://localhost:8888';
+// URL base para videos grabados por misión (nginx proxy con playback)
+const RECORDINGS_BASE_URL = import.meta.env.VITE_RECORDINGS_URL || 'http://localhost:8090';
 
 // Componente para mostrar una métrica individual
 interface MetricCardProps {
@@ -50,6 +50,25 @@ const TelemetryPanel = ({ telemetry, videoTime }: TelemetryPanelProps) => {
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
+    // Helper para formatear valores numéricos de forma segura
+    const safeFixed = (value: number | null | undefined, decimals: number): string => {
+        if (value === null || value === undefined || isNaN(value)) {
+            return '--';
+        }
+        return value.toFixed(decimals);
+    };
+
+    // Helper para formatear timestamps correctamente
+    // El backend guarda timestamps en hora local de Colombia (sin timezone)
+    const formatTimestamp = (timestamp: string): string => {
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString('es-CO', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    };
+
     if (!telemetry) {
         return (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 h-full flex items-center justify-center">
@@ -57,6 +76,9 @@ const TelemetryPanel = ({ telemetry, videoTime }: TelemetryPanelProps) => {
             </div>
         );
     }
+
+    const batteryLevel = telemetry.batteryLevel ?? 0;
+    const batteryColorClass = batteryLevel > 50 ? 'text-green-500' : batteryLevel > 20 ? 'text-yellow-500' : 'text-red-500';
 
     return (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 h-full">
@@ -73,30 +95,30 @@ const TelemetryPanel = ({ telemetry, videoTime }: TelemetryPanelProps) => {
                 <MetricCard
                     icon={<Gauge className="w-3 h-3" />}
                     label="Velocidad"
-                    value={telemetry.speed.toFixed(1)}
+                    value={safeFixed(telemetry.speed, 1)}
                     unit="m/s"
                     colorClass="text-green-500"
                 />
                 <MetricCard
                     icon={<Mountain className="w-3 h-3" />}
                     label="Altitud"
-                    value={telemetry.altitude.toFixed(1)}
+                    value={safeFixed(telemetry.altitude, 1)}
                     unit="m"
                     colorClass="text-blue-500"
                 />
                 <MetricCard
                     icon={<Navigation className="w-3 h-3" />}
                     label="Rumbo"
-                    value={telemetry.heading.toFixed(0)}
+                    value={safeFixed(telemetry.heading, 0)}
                     unit="°"
                     colorClass="text-purple-500"
                 />
                 <MetricCard
                     icon={<Battery className="w-3 h-3" />}
                     label="Batería"
-                    value={telemetry.batteryLevel.toFixed(0)}
+                    value={safeFixed(telemetry.batteryLevel, 0)}
                     unit="%"
-                    colorClass={telemetry.batteryLevel > 50 ? 'text-green-500' : telemetry.batteryLevel > 20 ? 'text-yellow-500' : 'text-red-500'}
+                    colorClass={batteryColorClass}
                 />
             </div>
 
@@ -104,11 +126,11 @@ const TelemetryPanel = ({ telemetry, videoTime }: TelemetryPanelProps) => {
                 <div>
                     <span className="text-xs text-gray-500 dark:text-gray-400">Coordenadas: </span>
                     <span className="font-mono text-xs text-gray-900 dark:text-white">
-                        {telemetry.latitude.toFixed(6)}, {telemetry.longitude.toFixed(6)}
+                        {safeFixed(telemetry.latitude, 6)}, {safeFixed(telemetry.longitude, 6)}
                     </span>
                 </div>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {new Date(telemetry.timestamp).toLocaleTimeString('es-CO')}
+                    {telemetry.timestamp ? formatTimestamp(telemetry.timestamp) : '--:--:--'}
                 </span>
             </div>
         </div>
@@ -137,9 +159,10 @@ export const MissionPlaybackPage = () => {
             ? new Date(mission.estimatedDate).getTime()
             : Date.now();
 
-    // URL del video - estructura: /videos/{mission_id}/{drone_id}.mp4
-    const videoUrl = missionId && droneId
-        ? `${RECORDINGS_BASE_URL}/videos/${missionId}/${droneId}.mp4`
+    // URL del video - estructura: /playback/{mission_id}/{dron-vehicleId}
+    // El nginx sirve /videos/{mission_id}/dron-{vehicleId}.mp4
+    const videoUrl = missionId && vehicleId
+        ? `${RECORDINGS_BASE_URL}/playback/${missionId}/dron-${vehicleId}`
         : '';
 
     // Estado del playback

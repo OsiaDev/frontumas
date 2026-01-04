@@ -21,6 +21,7 @@ export const ROUTES = {
     REPORTS: '/reports',
     ANALYTICS: '/analytics',
     SETTINGS: '/settings',
+    MONITORING: '/monitoring',
 
     // Rutas especiales
     ROOT: '/',

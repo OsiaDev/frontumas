@@ -14,6 +14,7 @@ const MissionFormPage = lazy(() => import('@features/missions').then(m => ({ def
 const MissionControlPage = lazy(() => import('@features/mission').then(m => ({ default: m.MissionPage })));
 const MissionPlaybackPage = lazy(() => import('@features/mission').then(m => ({ default: m.MissionPlaybackPage })));
 const OperatorsPage = lazy(() => import('@features/operators').then(m => ({ default: m.OperatorsPage })));
+const DroneMonitoringPage = lazy(() => import('@features/monitoring').then(m => ({ default: m.DroneMonitoringPage })));
 
 // Componente de carga
 const LoadingFallback = () => (
@@ -169,6 +170,19 @@ export const AppRouter = () => {
                             <MainLayout>
                                 <Suspense fallback={<LoadingFallback />}>
                                     <MissionPlaybackPage />
+                                </Suspense>
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path={ROUTES.MONITORING}
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <Suspense fallback={<LoadingFallback />}>
+                                    <DroneMonitoringPage />
                                 </Suspense>
                             </MainLayout>
                         </ProtectedRoute>
