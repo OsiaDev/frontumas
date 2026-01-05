@@ -1,7 +1,4 @@
-import { useEffect, useState } from 'react';
-import { useDroneStore } from '@features/drones';
-import { useMqttConnection } from '@/features/tracking/hooks/useMqttConnection';
-import { mqttHandlers } from '@/features/tracking/services/mqtt/mqtt.handlers';
+import { useMqttStore } from '@features/tracking/store/useMqttStore';
 import type { DroneLocationMessage } from '@shared/types/drone.types';
 
 interface UseDroneLocationsReturn {
@@ -12,35 +9,17 @@ interface UseDroneLocationsReturn {
     messageCount: number;
 }
 
+/**
+ * useDroneLocations - Hook para acceder al estado de ubicaciones de drones
+ *
+ * Este hook ahora es solo un consumidor del estado global de MQTT.
+ * La conexión y handlers se manejan en MqttInitializer a nivel de app.
+ */
 export const useDroneLocations = (): UseDroneLocationsReturn => {
-    const updateDroneLocation = useDroneStore((state) => state.updateDroneLocation);
-    const { status, error, connect } = useMqttConnection();
-    const [lastMessage, setLastMessage] = useState<DroneLocationMessage | null>(null);
-    const [messageCount, setMessageCount] = useState(0);
-
-    // Conectar automáticamente al montar (solo una vez)
-    useEffect(() => {
-        connect().catch((err) => {
-            console.error('Error al conectar MQTT:', err);
-        });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Solo ejecutar al montar el componente
-
-    // Registrar callback para mensajes de ubicación
-    useEffect(() => {
-        const unsubscribe = mqttHandlers.onLocation((message) => {
-            // Actualizar estado global de drones
-            updateDroneLocation(message);
-
-            // Actualizar estado local para feedback
-            setLastMessage(message);
-            setMessageCount(prev => prev + 1);
-        });
-
-        return () => {
-            unsubscribe();
-        };
-    }, [updateDroneLocation]);
+    const status = useMqttStore((state) => state.status);
+    const error = useMqttStore((state) => state.error);
+    const lastMessage = useMqttStore((state) => state.lastMessage);
+    const messageCount = useMqttStore((state) => state.messageCount);
 
     return {
         isConnected: status === 'CONNECTED',

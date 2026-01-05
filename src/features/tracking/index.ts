@@ -18,6 +18,8 @@ export { TrackingProvider } from './context/TrackingProvider';
 // Store (Zustand with localStorage)
 export { useTrackingStore } from './store/useTrackingStore';
 export { useGeofenceEventsStore } from './store/useGeofenceEventsStore';
+export { useMqttStore } from './store/useMqttStore';
+export type { MqttConnectionStatus } from './store/useMqttStore';
 
 // Hooks
 export { useMqttConnection } from './hooks/useMqttConnection';

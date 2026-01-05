@@ -17,6 +17,7 @@ export interface RolePermissions {
         reports: boolean;
         analytics: boolean;
         settings: boolean;
+        monitoring: boolean;
     };
 }
 
@@ -32,6 +33,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
             users: true,
             reports: true,
             analytics: true,
+            monitoring: true,
             settings: true,
         },
     },
@@ -51,6 +53,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
             routes: false,
             geofences: false,
             missions: true,
+            monitoring: true,
             users: true,
             reports: false,
             analytics: false,
@@ -70,6 +73,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
             dashboard: true,
             drones: false,
             routes: false,
+            monitoring: true,
             geofences: false,
             missions: true,
             users: false,
@@ -87,6 +91,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
             drones: false,
             routes: false,
             geofences: false,
+            monitoring: false,
             missions: false,
             users: false,
             reports: false,

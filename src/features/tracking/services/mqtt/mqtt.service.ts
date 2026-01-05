@@ -96,8 +96,9 @@ class MqttService {
     // Suscribirse a un topic
     subscribe(topic: MqttTopics, options?: IClientSubscribeOptions): Promise<void> {
         return new Promise((resolve, reject) => {
-            if (!this.client?.connected) {
-                reject(new Error('Cliente MQTT no conectado'));
+            // Verificar que el cliente existe (puede estar en proceso de conexión)
+            if (!this.client) {
+                reject(new Error('Cliente MQTT no inicializado'));
                 return;
             }
 

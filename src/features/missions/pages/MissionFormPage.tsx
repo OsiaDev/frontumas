@@ -4,6 +4,7 @@ import { ArrowLeft, Save, Trash2 } from 'lucide-react';
 import { Toggle } from '@shared/components/ui/Toggle';
 import { useMissionStore } from '@features/missions/store/useMissionStore';
 import { useMissionsApi } from '@features/missions/hooks/useMissionsApi';
+import { useAuthStore } from '@features/auth/store/useAuthStore';
 import { dronesApiService } from '@features/drones/services/drones.api.service';
 import { routesApiService } from '@features/routes/services/routes.api.service';
 import { operatorsApiService } from '@features/operators/services/operators.api.service';
@@ -26,17 +27,20 @@ export const MissionFormPage = () => {
 
     const { getMission } = useMissionStore();
     const { createMission, updateMission, fetchMissionById } = useMissionsApi();
+    const { user } = useAuthStore();
+
+    // Nombre del comandante obtenido del usuario autenticado
+    const commanderName = user?.username || 'Comandante';
 
     const [formData, setFormData] = useState({
         name: '',
         operatorId: '',
-        commanderName: '',
         estimatedDate: new Date().toISOString().slice(0, 16),
         isAutomatic: false,
     });
 
     const [droneAssignments, setDroneAssignments] = useState<DroneAssignmentFormData[]>([
-        { droneId: '', routeId: '', safeAltitude: 0, maxAltitude: 0 }
+        { droneId: '', routeId: '', safeAltitude: 50, maxAltitude: 100 }
     ]);
 
     const [drones, setDrones] = useState<Array<{ id: string; name: string }>>([]);
@@ -73,7 +77,6 @@ export const MissionFormPage = () => {
                     setFormData({
                         name: mission.name || '',
                         operatorId: mission.operatorId || '',
-                        commanderName: '',
                         isAutomatic: mission.missionType === 'AUTOMATICA',
                         estimatedDate: mission.estimatedDate
                             ? new Date(mission.estimatedDate).toISOString().slice(0, 16)
@@ -85,8 +88,8 @@ export const MissionFormPage = () => {
                             mission.assignedDrones.map(d => ({
                                 droneId: d.droneId,
                                 routeId: d.routeId || '',
-                                safeAltitude: 0,
-                                maxAltitude: 0,
+                                safeAltitude: 50,
+                                maxAltitude: 100,
                             }))
                         );
                     }
@@ -159,11 +162,6 @@ export const MissionFormPage = () => {
             return;
         }
 
-        if (!formData.commanderName.trim()) {
-            setError('Debe ingresar el nombre del comandante');
-            return;
-        }
-
         setIsSaving(true);
         setError(null);
 
@@ -183,7 +181,7 @@ export const MissionFormPage = () => {
             const missionData: CreateMissionDTO = {
                 name: formData.name.trim() || null,
                 operatorId: formData.operatorId.trim(),
-                commanderName: formData.commanderName.trim(),
+                commanderName,
                 estimatedDate: estimatedDateFormatted,
                 isAutomatic: formData.isAutomatic,
                 droneAssignments: droneAssignmentsDTO,
@@ -278,21 +276,14 @@ export const MissionFormPage = () => {
                             </select>
                         </div>
 
-                        {/* Nombre del Comandante */}
+                        {/* Nombre del Comandante (automático desde el usuario autenticado) */}
                         <div>
-                            <label htmlFor="commanderName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Nombre del Comandante *
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Comandante
                             </label>
-                            <input
-                                type="text"
-                                id="commanderName"
-                                name="commanderName"
-                                value={formData.commanderName}
-                                onChange={handleInputChange}
-                                required
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
-                                placeholder="Ej: Juan Pérez"
-                            />
+                            <div className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300">
+                                {commanderName}
+                            </div>
                         </div>
 
                         {/* Tipo de Misión */}

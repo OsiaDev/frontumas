@@ -1,4 +1,4 @@
-import { Home, Users, Settings, FileText, BarChart3, Plane, Route, SquareDashed, ListChecks } from 'lucide-react';
+import { Home, Users, Settings, FileText, BarChart3, Plane, Route, SquareDashed, ListChecks, Monitor } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import type { ComponentType } from 'react';
 import { useSidebarStore } from '@core/store';
@@ -19,6 +19,8 @@ const navItems: NavItem[] = [
     { path: '/routes', label: 'Rutas', icon: Route, module: 'routes' },
     { path: '/geofences', label: 'Geocercas', icon: SquareDashed, module: 'geofences' },
     { path: '/missions', label: 'Misiones', icon: ListChecks, module: 'missions' },
+    { path: '/monitoring', label: 'Monitoreo', icon: Monitor, module: 'monitoring' },
+
     { path: '/users', label: 'Usuarios', icon: Users, module: 'users' },
     { path: '/reports', label: 'Reportes', icon: FileText, module: 'reports' },
     { path: '/analytics', label: 'Analítica', icon: BarChart3, module: 'analytics' },

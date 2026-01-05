@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup, Polyline, useMap } from 'react-leaflet';
+import { useEffect, useMemo, useRef } from 'react';
+import { MapContainer, TileLayer, CircleMarker, Popup, Polyline, GeoJSON, useMap } from 'react-leaflet';
 import { Battery, Navigation, Clock, Compass, MapPin } from 'lucide-react';
 import { DEFAULT_CITY, MAP_TILE_CONFIG, MAP_ZOOM_CONFIG } from '@config/map.config';
 import type { TelemetryPoint } from '@features/mission/hooks/usePlaybackTelemetry';
-import type { LatLngExpression } from 'leaflet';
+import type { Route } from '@shared/types/route.types';
+import type { LatLngExpression, LatLngBounds } from 'leaflet';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 interface PlaybackMapProps {
@@ -11,21 +13,40 @@ interface PlaybackMapProps {
     telemetryHistory: TelemetryPoint[];
     vehicleId: string;
     showTrail?: boolean;
+    route?: Route | null;
 }
 
-interface MapCenterUpdaterProps {
-    center: LatLngExpression;
-    shouldFollow: boolean;
+interface MapCenterOnRouteProps {
+    bounds: LatLngBounds | null;
+    center: LatLngExpression | null;
 }
 
-const MapUpdater = ({ center, shouldFollow }: MapCenterUpdaterProps) => {
+// Componente para centrar el mapa en la ruta (solo una vez al cargar)
+const MapCenterOnRoute = ({ bounds, center }: MapCenterOnRouteProps) => {
     const map = useMap();
+    const hasCentered = useRef(false);
 
     useEffect(() => {
-        if (shouldFollow) {
-            map.setView(center, map.getZoom(), { animate: true });
+        if (!hasCentered.current && bounds && center) {
+            // Esperar a que el mapa tenga dimensiones correctas
+            const centerMap = () => {
+                // Invalidar tamaño para que Leaflet recalcule las dimensiones
+                map.invalidateSize();
+
+                // Calcular el zoom óptimo basado en el tamaño de los bounds
+                const zoom = map.getBoundsZoom(bounds, false, [60, 60]);
+                // Limitar el zoom para que la ruta sea visible
+                const optimalZoom = Math.min(Math.max(zoom, 14), 17);
+
+                // Centrar el mapa en el centro de la ruta con el zoom calculado
+                map.setView(center, optimalZoom);
+                hasCentered.current = true;
+            };
+
+            // Pequeño delay para asegurar que el contenedor tenga dimensiones
+            setTimeout(centerMap, 100);
         }
-    }, [center, shouldFollow, map]);
+    }, [bounds, center, map]);
 
     return null;
 };
@@ -34,13 +55,62 @@ export const PlaybackMap = ({
     currentTelemetry,
     telemetryHistory,
     vehicleId,
-    showTrail = true
+    showTrail = true,
+    route
 }: PlaybackMapProps) => {
-    const [followDrone, setFollowDrone] = useState(true);
+    // Parsear GeoJSON de la ruta y calcular bounds
+    const { routeGeoJson, routeBounds, routeCenter } = useMemo(() => {
+        if (!route?.geojson) {
+            return { routeGeoJson: null, routeBounds: null, routeCenter: null };
+        }
+        try {
+            const geojson = JSON.parse(route.geojson);
 
-    const currentPosition: LatLngExpression = currentTelemetry
-        ? [currentTelemetry.latitude, currentTelemetry.longitude]
-        : [DEFAULT_CITY.latitude, DEFAULT_CITY.longitude];
+            // Extraer coordenadas del GeoJSON para calcular bounds
+            const coordinates: [number, number][] = [];
+
+            const extractCoords = (feature: any) => {
+                if (feature.geometry?.coordinates) {
+                    if (feature.geometry.type === 'LineString') {
+                        feature.geometry.coordinates.forEach((coord: number[]) => {
+                            // GeoJSON es [lng, lat], Leaflet necesita [lat, lng]
+                            coordinates.push([coord[1], coord[0]]);
+                        });
+                    } else if (feature.geometry.type === 'Point') {
+                        coordinates.push([feature.geometry.coordinates[1], feature.geometry.coordinates[0]]);
+                    }
+                }
+            };
+
+            if (geojson.type === 'FeatureCollection') {
+                geojson.features.forEach(extractCoords);
+            } else if (geojson.type === 'Feature') {
+                extractCoords(geojson);
+            }
+
+            if (coordinates.length > 0) {
+                const bounds = L.latLngBounds(coordinates);
+                const center = bounds.getCenter();
+                return {
+                    routeGeoJson: geojson,
+                    routeBounds: bounds,
+                    routeCenter: [center.lat, center.lng] as LatLngExpression
+                };
+            }
+
+            return { routeGeoJson: geojson, routeBounds: null, routeCenter: null };
+        } catch (e) {
+            console.error('Error parsing route GeoJSON:', e);
+            return { routeGeoJson: null, routeBounds: null, routeCenter: null };
+        }
+    }, [route]);
+
+    // Centro del mapa: preferir centro de la ruta, luego posición del dron, luego default
+    const mapCenter: LatLngExpression = routeCenter
+        ? routeCenter
+        : currentTelemetry
+            ? [currentTelemetry.latitude, currentTelemetry.longitude]
+            : [DEFAULT_CITY.latitude, DEFAULT_CITY.longitude];
 
     // Crear trail de posiciones hasta el punto actual
     const trailPositions: LatLngExpression[] = telemetryHistory
@@ -51,6 +121,8 @@ export const PlaybackMap = ({
         .map(t => [t.latitude, t.longitude]);
 
     const formatTimestamp = (timestamp: string): string => {
+        // El backend guarda timestamps en hora local de Colombia (sin timezone)
+        // Simplemente extraer la hora del timestamp sin conversiones
         const date = new Date(timestamp);
         return date.toLocaleTimeString('es-CO', {
             hour: '2-digit',
@@ -69,17 +141,11 @@ export const PlaybackMap = ({
                         Posición - {vehicleId}
                     </h3>
                 </div>
-                <div className="flex items-center gap-2">
-                    <label className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={followDrone}
-                            onChange={(e) => setFollowDrone(e.target.checked)}
-                            className="rounded border-gray-300"
-                        />
-                        Seguir
-                    </label>
-                </div>
+                {route && (
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {route.name}
+                    </span>
+                )}
             </div>
 
             {/* Telemetry Info */}
@@ -129,28 +195,43 @@ export const PlaybackMap = ({
             {/* Map */}
             <div className="flex-1 relative min-h-0">
                 <MapContainer
-                    center={currentPosition}
-                    zoom={16}
+                    center={mapCenter}
+                    zoom={17}
                     minZoom={MAP_ZOOM_CONFIG.min}
                     maxZoom={MAP_ZOOM_CONFIG.max}
                     className="w-full h-full"
                     zoomControl={true}
                 >
-                    <MapUpdater center={currentPosition} shouldFollow={followDrone} />
+                    {/* Centrar el mapa en la ruta al cargar */}
+                    <MapCenterOnRoute bounds={routeBounds} center={routeCenter} />
                     <TileLayer
                         url={MAP_TILE_CONFIG.url}
                         attribution={MAP_TILE_CONFIG.attribution}
                         maxZoom={MAP_TILE_CONFIG.maxZoom}
                     />
 
-                    {/* Trail de posiciones */}
+                    {/* Ruta planificada (GeoJSON) */}
+                    {routeGeoJson && (
+                        <GeoJSON
+                            key={route?.id}
+                            data={routeGeoJson}
+                            style={{
+                                color: '#10b981',
+                                weight: 4,
+                                opacity: 0.6,
+                                dashArray: '10, 5',
+                            }}
+                        />
+                    )}
+
+                    {/* Trail de posiciones (ruta real recorrida) */}
                     {showTrail && trailPositions.length > 1 && (
                         <Polyline
                             positions={trailPositions}
                             pathOptions={{
                                 color: '#3b82f6',
                                 weight: 3,
-                                opacity: 0.7,
+                                opacity: 0.8,
                             }}
                         />
                     )}

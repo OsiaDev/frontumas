@@ -1,20 +1,19 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Video, Clock, Calendar, Gauge, Navigation, Battery, Mountain } from 'lucide-react';
+import { ArrowLeft, Video, Clock, Calendar, Gauge, Navigation, Battery, Mountain, AlertCircle } from 'lucide-react';
 import { PlaybackVideoPlayer } from '@/features/mission/components/PlaybackVideoPlayer';
 import { PlaybackMap } from '@/features/mission/components/PlaybackMap';
 import {
     usePlaybackTelemetry,
-    extractTimestampFromFilename,
-    extractVehicleIdFromFilename,
     TelemetryPoint
 } from '@features/mission/hooks/usePlaybackTelemetry';
+import { missionsApiService } from '@features/missions/services/missions.api.service';
+import { routesApiService } from '@features/routes/services/routes.api.service';
+import type { Mission } from '@shared/types/mission.types';
+import type { Route } from '@shared/types/route.types';
 
-// Configuración temporal - En producción esto vendría de un API de grabaciones
-const RECORDINGS_BASE_URL = import.meta.env.VITE_MEDIAMTX_HLS_URL || 'http://localhost:8080';
-
-// Video de ejemplo hardcodeado por ahora
-const DEFAULT_VIDEO_FILENAME = 'DRONE-005_1764531709.mp4';
+// URL base para videos grabados por misión (nginx proxy con playback)
+const RECORDINGS_BASE_URL = import.meta.env.VITE_RECORDINGS_URL || 'http://localhost:8090';
 
 // Componente para mostrar una métrica individual
 interface MetricCardProps {
@@ -51,6 +50,25 @@ const TelemetryPanel = ({ telemetry, videoTime }: TelemetryPanelProps) => {
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
+    // Helper para formatear valores numéricos de forma segura
+    const safeFixed = (value: number | null | undefined, decimals: number): string => {
+        if (value === null || value === undefined || isNaN(value)) {
+            return '--';
+        }
+        return value.toFixed(decimals);
+    };
+
+    // Helper para formatear timestamps correctamente
+    // El backend guarda timestamps en hora local de Colombia (sin timezone)
+    const formatTimestamp = (timestamp: string): string => {
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString('es-CO', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    };
+
     if (!telemetry) {
         return (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 h-full flex items-center justify-center">
@@ -58,6 +76,9 @@ const TelemetryPanel = ({ telemetry, videoTime }: TelemetryPanelProps) => {
             </div>
         );
     }
+
+    const batteryLevel = telemetry.batteryLevel ?? 0;
+    const batteryColorClass = batteryLevel > 50 ? 'text-green-500' : batteryLevel > 20 ? 'text-yellow-500' : 'text-red-500';
 
     return (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 h-full">
@@ -74,30 +95,30 @@ const TelemetryPanel = ({ telemetry, videoTime }: TelemetryPanelProps) => {
                 <MetricCard
                     icon={<Gauge className="w-3 h-3" />}
                     label="Velocidad"
-                    value={telemetry.speed.toFixed(1)}
+                    value={safeFixed(telemetry.speed, 1)}
                     unit="m/s"
                     colorClass="text-green-500"
                 />
                 <MetricCard
                     icon={<Mountain className="w-3 h-3" />}
                     label="Altitud"
-                    value={telemetry.altitude.toFixed(1)}
+                    value={safeFixed(telemetry.altitude, 1)}
                     unit="m"
                     colorClass="text-blue-500"
                 />
                 <MetricCard
                     icon={<Navigation className="w-3 h-3" />}
                     label="Rumbo"
-                    value={telemetry.heading.toFixed(0)}
+                    value={safeFixed(telemetry.heading, 0)}
                     unit="°"
                     colorClass="text-purple-500"
                 />
                 <MetricCard
                     icon={<Battery className="w-3 h-3" />}
                     label="Batería"
-                    value={telemetry.batteryLevel.toFixed(0)}
+                    value={safeFixed(telemetry.batteryLevel, 0)}
                     unit="%"
-                    colorClass={telemetry.batteryLevel > 50 ? 'text-green-500' : telemetry.batteryLevel > 20 ? 'text-yellow-500' : 'text-red-500'}
+                    colorClass={batteryColorClass}
                 />
             </div>
 
@@ -105,11 +126,11 @@ const TelemetryPanel = ({ telemetry, videoTime }: TelemetryPanelProps) => {
                 <div>
                     <span className="text-xs text-gray-500 dark:text-gray-400">Coordenadas: </span>
                     <span className="font-mono text-xs text-gray-900 dark:text-white">
-                        {telemetry.latitude.toFixed(6)}, {telemetry.longitude.toFixed(6)}
+                        {safeFixed(telemetry.latitude, 6)}, {safeFixed(telemetry.longitude, 6)}
                     </span>
                 </div>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {new Date(telemetry.timestamp).toLocaleTimeString('es-CO')}
+                    {telemetry.timestamp ? formatTimestamp(telemetry.timestamp) : '--:--:--'}
                 </span>
             </div>
         </div>
@@ -117,21 +138,75 @@ const TelemetryPanel = ({ telemetry, videoTime }: TelemetryPanelProps) => {
 };
 
 export const MissionPlaybackPage = () => {
-    const { id: _missionId } = useParams<{ id: string }>();
+    const { id: missionId } = useParams<{ id: string }>();
     const navigate = useNavigate();
 
-    // Extraer información del nombre del archivo
-    const videoFilename = DEFAULT_VIDEO_FILENAME;
-    const vehicleId = extractVehicleIdFromFilename(videoFilename) || 'DRONE-005';
-    const videoStartTimestamp = extractTimestampFromFilename(videoFilename) || Date.now();
+    // Estado para datos de la misión
+    const [mission, setMission] = useState<Mission | null>(null);
+    const [route, setRoute] = useState<Route | null>(null);
+    const [isLoadingMission, setIsLoadingMission] = useState(true);
+    const [missionError, setMissionError] = useState<string | null>(null);
 
-    // URL del video - Por ahora apunta al archivo estático
-    // En producción esto vendría de un servicio de grabaciones
-    const videoUrl = `${RECORDINGS_BASE_URL}/videos/${videoFilename}`;
+    // Datos del dron seleccionado (primer dron de la misión)
+    const selectedDrone = mission?.assignedDrones?.[0];
+    const vehicleId = selectedDrone?.vehicleId || selectedDrone?.droneName || 'DRONE';
+    const droneId = selectedDrone?.droneId;
+
+    // Timestamp de inicio basado en la fecha de la misión
+    const videoStartTimestamp = mission?.startDate
+        ? new Date(mission.startDate).getTime()
+        : mission?.estimatedDate
+            ? new Date(mission.estimatedDate).getTime()
+            : Date.now();
+
+    // URL del video - estructura: /playback/{mission_id}/{dron-vehicleId}
+    // El nginx sirve /videos/{mission_id}/dron-{vehicleId}.mp4
+    const videoUrl = missionId && vehicleId
+        ? `${RECORDINGS_BASE_URL}/playback/${missionId}/dron-${vehicleId}`
+        : '';
 
     // Estado del playback
     const [currentVideoTime, setCurrentVideoTime] = useState(0);
     const [_videoDuration, setVideoDuration] = useState(0);
+
+    // Cargar datos de la misión
+    useEffect(() => {
+        const loadMissionData = async () => {
+            if (!missionId) {
+                setMissionError('ID de misión no proporcionado');
+                setIsLoadingMission(false);
+                return;
+            }
+
+            setIsLoadingMission(true);
+            setMissionError(null);
+
+            try {
+                // Cargar misión
+                const missionData = await missionsApiService.getMissionById(missionId);
+                setMission(missionData);
+
+                // Cargar ruta si el dron tiene una asignada
+                const firstDrone = missionData.assignedDrones?.[0];
+                if (firstDrone?.routeId) {
+                    try {
+                        const routeData = await routesApiService.getRouteById(firstDrone.routeId);
+                        setRoute(routeData);
+                    } catch (routeErr) {
+                        console.warn('No se pudo cargar la ruta:', routeErr);
+                    }
+                }
+            } catch (err) {
+                const errorMessage = err instanceof Error ? err.message : 'Error al cargar la misión';
+                setMissionError(errorMessage);
+                console.error('Error loading mission:', err);
+            } finally {
+                setIsLoadingMission(false);
+            }
+        };
+
+        loadMissionData();
+    }, [missionId]);
 
     // Hook de telemetría sincronizada
     const {
@@ -143,7 +218,7 @@ export const MissionPlaybackPage = () => {
     } = usePlaybackTelemetry({
         vehicleId,
         videoStartTimestamp,
-        enabled: true
+        enabled: !!mission && !!vehicleId
     });
 
     // Callback para actualización de tiempo del video
@@ -171,6 +246,36 @@ export const MissionPlaybackPage = () => {
         });
     };
 
+    // Estado de carga
+    if (isLoadingMission) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p className="text-gray-600 dark:text-gray-400">Cargando misión...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Error de carga
+    if (missionError) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <div className="text-center">
+                    <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                    <p className="text-red-600 dark:text-red-400 mb-4">{missionError}</p>
+                    <button
+                        onClick={() => navigate('/missions')}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                    >
+                        Volver a misiones
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="pb-4">
             {/* Header Section */}
@@ -186,7 +291,7 @@ export const MissionPlaybackPage = () => {
                         </button>
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                             <Video className="w-7 h-7 text-blue-500" />
-                            Reproducción de Misión
+                            {mission?.name || 'Reproducción de Misión'}
                         </h2>
                         <div className="flex items-center gap-4 mt-2">
                             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
@@ -197,11 +302,21 @@ export const MissionPlaybackPage = () => {
                                 <Clock size={16} />
                                 <span>Dron: {vehicleId}</span>
                             </div>
+                            {route && (
+                                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                    <Navigation size={16} />
+                                    <span>Ruta: {route.name}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
-                        <span className="text-xs text-white bg-blue-600 px-3 py-1.5 rounded-full font-medium">
-                            MISIÓN FINALIZADA
+                        <span className={`text-xs text-white px-3 py-1.5 rounded-full font-medium ${
+                            mission?.state === 'FINALIZADA' ? 'bg-blue-600' :
+                            mission?.state === 'EN_EJECUCION' ? 'bg-green-600' :
+                            'bg-gray-600'
+                        }`}>
+                            {mission?.state || 'DESCONOCIDO'}
                         </span>
                     </div>
                 </div>
@@ -236,12 +351,21 @@ export const MissionPlaybackPage = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-220px)] min-h-[500px]">
                     {/* Video Player - 8/12 del espacio (izquierda) */}
                     <div className="lg:col-span-8 h-full">
-                        <PlaybackVideoPlayer
-                            videoUrl={videoUrl}
-                            title={`Grabación - ${vehicleId}`}
-                            onTimeUpdate={handleTimeUpdate}
-                            onSeek={handleSeek}
-                        />
+                        {videoUrl ? (
+                            <PlaybackVideoPlayer
+                                videoUrl={videoUrl}
+                                title={`Grabación - ${vehicleId}`}
+                                onTimeUpdate={handleTimeUpdate}
+                                onSeek={handleSeek}
+                            />
+                        ) : (
+                            <div className="h-full bg-gray-900 rounded-lg flex items-center justify-center">
+                                <div className="text-center text-gray-400">
+                                    <Video className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                                    <p>No hay video disponible para esta misión</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Panel derecho - Telemetría arriba, Mapa abajo */}
@@ -261,6 +385,7 @@ export const MissionPlaybackPage = () => {
                                 telemetryHistory={telemetryData}
                                 vehicleId={vehicleId}
                                 showTrail={true}
+                                route={route}
                             />
                         </div>
                     </div>

@@ -22,7 +22,7 @@ export const LiveVideoPlayer = ({
     const [isConnected, setIsConnected] = useState(false);
 
     const hlsUrl = droneId
-        ? `${MEDIAMTX_HLS_URL}/${droneId}/live/index.m3u8`
+        ? `${MEDIAMTX_HLS_URL}/dron-${droneId}/live/index.m3u8`
         : null;
 
     const destroyHls = () => {

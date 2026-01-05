@@ -50,7 +50,8 @@ interface UsePlaybackTelemetryReturn {
     loadTelemetryRange: (startDate: string, endDate: string) => Promise<void>;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+// Usar la configuración centralizada que ya incluye /api
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
 /**
  * Normaliza un timestamp del API a formato ISO UTC
@@ -109,7 +110,7 @@ export const usePlaybackTelemetry = ({
         setError(null);
 
         try {
-            const url = `${API_BASE_URL}/api/telemetry/vehicle/${vehicleId}/range?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
+            const url = `${API_BASE_URL}/telemetry/vehicle/${vehicleId}/range?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
 
             const response = await fetch(url);
 
@@ -150,17 +151,22 @@ export const usePlaybackTelemetry = ({
             return;
         }
 
-        // Calcular el timestamp correspondiente al tiempo del video
-        const targetTimestamp = videoStartTimestamp + (videoCurrentTime * 1000);
-
-        // Debug: Log first telemetry timestamp for comparison
+        // Usar el primer punto de telemetría como referencia para sincronización
+        // Esto es más confiable que usar videoStartTimestamp de la misión
+        // ya que los timestamps de telemetría reflejan cuando realmente se grabó
         const firstTelemetryTime = new Date(telemetryData[0].timestamp).getTime();
         const lastTelemetryTime = new Date(telemetryData[telemetryData.length - 1].timestamp).getTime();
 
-        console.log('[Telemetry Sync] Video time:', videoCurrentTime, 's');
-        console.log('[Telemetry Sync] Video start timestamp:', videoStartTimestamp, '=', new Date(videoStartTimestamp).toISOString());
-        console.log('[Telemetry Sync] Target timestamp:', targetTimestamp, '=', new Date(targetTimestamp).toISOString());
-        console.log('[Telemetry Sync] Telemetry range:', new Date(firstTelemetryTime).toISOString(), 'to', new Date(lastTelemetryTime).toISOString());
+        // Calcular el timestamp correspondiente al tiempo del video
+        // usando el primer punto de telemetría como t=0
+        const targetTimestamp = firstTelemetryTime + (videoCurrentTime * 1000);
+
+        // Debug logs (solo si hay cambio significativo)
+        if (Math.abs(videoCurrentTime - telemetryIndexRef.current) > 1) {
+            console.log('[Telemetry Sync] Video time:', videoCurrentTime, 's');
+            console.log('[Telemetry Sync] Target:', new Date(targetTimestamp).toISOString());
+            console.log('[Telemetry Sync] Telemetry range:', new Date(firstTelemetryTime).toISOString(), 'to', new Date(lastTelemetryTime).toISOString());
+        }
 
         // Buscar el punto de telemetría más cercano usando búsqueda binaria
         let left = 0;
@@ -187,24 +193,37 @@ export const usePlaybackTelemetry = ({
             }
         }
 
-        console.log('[Telemetry Sync] Closest index:', closestIndex, 'Previous index:', telemetryIndexRef.current);
-
         // Solo actualizar si cambió el índice (evitar re-renders innecesarios)
         if (closestIndex !== telemetryIndexRef.current) {
             telemetryIndexRef.current = closestIndex;
             setCurrentTelemetry(telemetryData[closestIndex]);
-            console.log('[Telemetry Sync] Updated to telemetry point:', telemetryData[closestIndex]);
         }
-    }, [telemetryData, videoStartTimestamp]);
+    }, [telemetryData]);
 
     // Cargar telemetría inicial cuando se habilita el hook
     useEffect(() => {
         if (!enabled || !vehicleId || !videoStartTimestamp) return;
 
         // Calcular rango de fechas basado en el timestamp del video
-        // Asumimos que el video dura máximo 2 horas
-        const startDate = new Date(videoStartTimestamp);
-        const endDate = new Date(videoStartTimestamp + (2 * 60 * 60 * 1000)); // +2 horas
+        // Usamos el día completo de la fecha de la misión para capturar toda la telemetría
+        // ya que puede haber diferencias de timezone entre el startDate y los timestamps reales
+        const missionDate = new Date(videoStartTimestamp);
+
+        // Inicio del día UTC
+        const startDate = new Date(Date.UTC(
+            missionDate.getUTCFullYear(),
+            missionDate.getUTCMonth(),
+            missionDate.getUTCDate(),
+            0, 0, 0, 0
+        ));
+
+        // Fin del día UTC
+        const endDate = new Date(Date.UTC(
+            missionDate.getUTCFullYear(),
+            missionDate.getUTCMonth(),
+            missionDate.getUTCDate(),
+            23, 59, 59, 999
+        ));
 
         loadTelemetryRange(
             startDate.toISOString(),

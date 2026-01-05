@@ -44,8 +44,31 @@ export const PlaybackVideoPlayer = ({
         };
 
         const handleTimeUpdate = () => {
-            setCurrentTime(video.currentTime);
-            onTimeUpdate?.(video.currentTime, video.duration);
+            const current = video.currentTime;
+            setCurrentTime(current);
+
+            // Corregir duración si el tiempo actual supera la duración reportada
+            // Esto ocurre cuando los metadatos del MP4 no reflejan la duración real
+            if (current > duration && duration > 0) {
+                setDuration(current + 1);
+            }
+
+            onTimeUpdate?.(current, video.duration);
+        };
+
+        // Capturar duración real cuando el video termina
+        const handleEnded = () => {
+            const realDuration = video.currentTime;
+            if (realDuration > duration) {
+                setDuration(realDuration);
+            }
+            setIsPlaying(false);
+        };
+
+        const handleDurationChange = () => {
+            if (video.duration && isFinite(video.duration)) {
+                setDuration(video.duration);
+            }
         };
 
         const handlePlay = () => setIsPlaying(true);
@@ -59,6 +82,8 @@ export const PlaybackVideoPlayer = ({
 
         video.addEventListener('loadedmetadata', handleLoadedMetadata);
         video.addEventListener('timeupdate', handleTimeUpdate);
+        video.addEventListener('durationchange', handleDurationChange);
+        video.addEventListener('ended', handleEnded);
         video.addEventListener('play', handlePlay);
         video.addEventListener('pause', handlePause);
         video.addEventListener('error', handleError);
@@ -68,13 +93,15 @@ export const PlaybackVideoPlayer = ({
         return () => {
             video.removeEventListener('loadedmetadata', handleLoadedMetadata);
             video.removeEventListener('timeupdate', handleTimeUpdate);
+            video.removeEventListener('durationchange', handleDurationChange);
+            video.removeEventListener('ended', handleEnded);
             video.removeEventListener('play', handlePlay);
             video.removeEventListener('pause', handlePause);
             video.removeEventListener('error', handleError);
             video.removeEventListener('waiting', handleWaiting);
             video.removeEventListener('canplay', handleCanPlay);
         };
-    }, [onTimeUpdate]);
+    }, [onTimeUpdate, duration]);
 
     const togglePlay = useCallback(() => {
         if (!videoRef.current) return;
