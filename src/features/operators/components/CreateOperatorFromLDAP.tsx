@@ -25,6 +25,7 @@ export const CreateOperatorFromLDAP = () => {
         password: '',
         confirmPassword: '',
         employeeNumber: '',
+        phoneNumber: '',
         department: '',
         title: '',
         enabled: true
@@ -120,6 +121,7 @@ export const CreateOperatorFromLDAP = () => {
                     password: '',
                     confirmPassword: '',
                     employeeNumber: user.credentialNumber || credentialNumber,
+                    phoneNumber: '',
                     department: user.department || '',
                     title: user.jobTitle || '',
                     enabled: true
@@ -226,7 +228,7 @@ export const CreateOperatorFromLDAP = () => {
                 username: formData.username,
                 fullName: `${formData.firstName} ${formData.lastName}`.trim() || formData.username,
                 email: formData.email,
-                phoneNumber: ldapUser.credentialNumber,
+                phoneNumber: formData.phoneNumber,
                 ugcsUserId: undefined, // Puede ser poblado luego si integran con UGCS
                 userKeycloak: formData.username,
                 status: 'ACTIVE' as OperatorStatus,
@@ -262,6 +264,7 @@ export const CreateOperatorFromLDAP = () => {
             password: '',
             confirmPassword: '',
             employeeNumber: '',
+            phoneNumber: '',
             department: '',
             title: '',
             enabled: true
@@ -459,8 +462,8 @@ export const CreateOperatorFromLDAP = () => {
                             <input
                                 type="text"
                                 value={formData.employeeNumber}
-                                readOnly
-                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 cursor-not-allowed"
+                                onChange={(e) => setFormData({ ...formData, employeeNumber: e.target.value })}
+                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300"
                             />
                         </div>
 
@@ -476,7 +479,19 @@ export const CreateOperatorFromLDAP = () => {
                             />
                         </div>
 
-                        <div className="md:col-span-2">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Teléfono
+                            </label>
+                            <input
+                                type="text"
+                                value={formData.phoneNumber}
+                                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                        </div>
+
+                        <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Cargo/Título
                             </label>

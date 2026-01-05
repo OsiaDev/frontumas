@@ -70,6 +70,14 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     }
 
     if (!hasRouteAccess(roles, location.pathname)) {
+        // Si el usuario no tiene acceso al dashboard, cerrar sesión automáticamente
+        // Esto evita que quede atrapado en un bucle de acceso denegado
+        if (location.pathname === '/dashboard') {
+            console.log('[ProtectedRoute] Usuario sin acceso al dashboard. Cerrando sesión...');
+            logout();
+            return <Navigate to="/login" replace />;
+        }
+
         return (
             <div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
                 <div className="text-center max-w-md p-8">

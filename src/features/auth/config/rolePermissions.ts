@@ -45,7 +45,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
             '/missions/edit/:id',
             '/missions/:id/control',
             '/missions/:id/playback',
-            '/users'
+            '/users',
+            '/monitoring'
         ],
         modules: {
             dashboard: true,
@@ -68,6 +69,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
             '/missions/edit/:id',
             '/missions/:id/control',
             '/missions/:id/playback',
+            '/monitoring'
         ],
         modules: {
             dashboard: true,
