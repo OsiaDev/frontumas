@@ -10,6 +10,7 @@ class AuthService {
     private keycloakInstance = keycloak;
     private isInitialized = false;
     private initializationPromise: Promise<boolean> | null = null;
+    private onLogoutCallback: (() => void) | null = null;
 
     // Verificar si estamos en un contexto seguro (HTTPS o localhost)
     private isSecureContext(): boolean {
@@ -24,6 +25,11 @@ class AuthService {
     // Establecer el modo de autenticación
     setAuthMode(mode: AuthMode): void {
         localStorage.setItem(AUTH_MODE_KEY, mode);
+    }
+
+    // Establecer callback que se ejecutará cuando ocurra un logout automático
+    setOnLogoutCallback(callback: () => void): void {
+        this.onLogoutCallback = callback;
     }
 
     async initKeycloak(): Promise<boolean> {
@@ -169,7 +175,6 @@ class AuthService {
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
 
-            // Si el error es por Web Crypto API, dar instrucciones claras
             if (errorMessage.includes('Web Crypto API')) {
                 console.error('[Keycloak] Web Crypto API no disponible. Debes acceder via HTTPS o localhost.');
                 throw new Error('Para usar Keycloak, accede via HTTPS o localhost. Alternativamente, deshabilita PKCE en la configuración del cliente Keycloak.');
@@ -180,9 +185,7 @@ class AuthService {
         }
     }
 
-    // Inicialización específica para login (sin verificar el modo)
     private async initKeycloakForLogin(): Promise<boolean> {
-        // Verificar si ya está inicializado (por nosotros o internamente)
         if (this.isInitialized || this.keycloakInstance.authenticated !== undefined) {
             this.isInitialized = true;
             return this.keycloakInstance.authenticated || false;
@@ -196,7 +199,6 @@ class AuthService {
             try {
                 console.log('[Keycloak] Iniciando para login...');
 
-                // Solo usar PKCE si estamos en contexto seguro (HTTPS o localhost)
                 const initOptions: Keycloak.KeycloakInitOptions = {
                     onLoad: 'check-sso',
                     checkLoginIframe: false,
@@ -217,7 +219,6 @@ class AuthService {
 
                 return authenticated;
             } catch (error) {
-                // Si el error es "ya inicializado", marcar como inicializado y continuar
                 const errorMessage = error instanceof Error ? error.message : String(error);
                 if (errorMessage.includes('initialized once')) {
                     console.log('[Keycloak] Ya estaba inicializado, continuando...');
@@ -237,15 +238,22 @@ class AuthService {
 
     async logout(): Promise<void> {
         try {
+            if (this.tokenRefreshInterval) {
+                clearInterval(this.tokenRefreshInterval);
+                this.tokenRefreshInterval = null;
+            }
+
             localStorage.removeItem(USER_KEY);
+
+            if (this.onLogoutCallback) {
+                this.onLogoutCallback();
+            }
 
             const authMode = this.getAuthMode();
 
             if (authMode === 'keycloak' && this.keycloakInstance.authenticated) {
-                // Logout de Keycloak
                 await this.keycloakInstance.logout();
             }
-            // Para traditional, solo limpiar localStorage (ya hecho arriba)
         } catch (error) {
             console.error('Error en logout:', error);
         }
@@ -255,13 +263,11 @@ class AuthService {
         const authMode = this.getAuthMode();
 
         if (authMode === 'keycloak') {
-            // Si Keycloak está autenticado, obtener datos actuales
             if (this.keycloakInstance.authenticated) {
                 return this.getUserFromKeycloak();
             }
         }
 
-        // Intentar obtener de localStorage (para traditional o keycloak fallback)
         try {
             const userData = localStorage.getItem(USER_KEY);
             return userData ? JSON.parse(userData) : null;
@@ -276,7 +282,6 @@ class AuthService {
         if (authMode === 'keycloak') {
             return this.keycloakInstance.token || null;
         } else {
-            // Para traditional, obtener token del localStorage
             const user = this.getStoredUser();
             return user?.token || null;
         }
@@ -288,28 +293,35 @@ class AuthService {
         if (authMode === 'keycloak') {
             return this.keycloakInstance.authenticated || false;
         } else {
-            // Para traditional, verificar si hay usuario en localStorage
             return this.getStoredUser() !== null;
         }
     }
 
     async updateToken(): Promise<boolean> {
-        const authMode = this.getAuthMode();
+    const authMode = this.getAuthMode();
 
-        if (authMode === 'keycloak') {
-            try {
-                // Refrescar token si está por expirar en los próximos 30 segundos
-                const refreshed = await this.keycloakInstance.updateToken(30);
-                return refreshed;
-            } catch (error) {
-                console.error('Error al actualizar token:', error);
-                return false;
+    if (authMode === 'keycloak') {
+        try {            
+            const refreshed = await this.keycloakInstance.updateToken(30);
+            if (refreshed) {
+                console.log('[Keycloak] Token refrescado exitosamente');
+                const user = this.getUserFromKeycloak();
+                if (user) {
+                    this.storeAuthData(user);
+                }
+            } else {
+                console.log('[Keycloak] Token aún válido, no necesita refresh');
             }
-        }
 
-        // Para traditional, no hay refresh de token
-        return true;
+            return refreshed;
+        } catch (error) {
+            console.error('[Keycloak] Error al actualizar token:', error);
+            return false;
+        }
     }
+
+    return true;
+}
 
     getKeycloakInstance() {
         return this.keycloakInstance;
@@ -338,20 +350,38 @@ class AuthService {
     private tokenRefreshInterval: number | null = null;
 
     private setupTokenRefresh(): void {
-        // Evitar múltiples intervalos
-        if (this.tokenRefreshInterval) {
-            return;
-        }
-
-        // Refrescar token cada 60 segundos
-        this.tokenRefreshInterval = window.setInterval(async () => {
-            try {
-                await this.updateToken();
-            } catch (error) {
-                console.error('Error al refrescar token:', error);
-            }
-        }, 60000);
+    if (this.tokenRefreshInterval) {
+        return;
     }
+
+    this.keycloakInstance.onTokenExpired = () => {
+        console.log('[Keycloak] Token expirado, intentando refrescar...');
+        this.updateToken().then((refreshed) => {
+            if (!refreshed) {
+                console.log('[Keycloak] No se pudo refrescar el token, cerrando sesión...');
+                this.logout();
+            }
+        });
+    };
+
+    this.tokenRefreshInterval = window.setInterval(async () => {
+        try {
+            console.log('[Keycloak] Verificando y refrescando token...');
+            await this.updateToken();
+            if (this.keycloakInstance.isTokenExpired()) {
+                console.log('[Keycloak] Token expirado y no se pudo refrescar, cerrando sesión...');
+                clearInterval(this.tokenRefreshInterval!);
+                this.tokenRefreshInterval = null;
+                await this.logout();
+            }
+        } catch (error) {
+            console.error('[Keycloak] Error al refrescar token:', error);
+            clearInterval(this.tokenRefreshInterval!);
+            this.tokenRefreshInterval = null;
+            await this.logout();
+        }
+    }, 60000);
+}
 }
 
 export const authService = new AuthService();

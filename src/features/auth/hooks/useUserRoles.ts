@@ -6,9 +6,24 @@ import { authService } from '@/features/auth/services/auth.service';
 export const useUserRoles = () => {
     const keycloak = authService.getKeycloakInstance();
 
-    console.log(keycloak.tokenParsed)
+    // Si no hay token válido, retornar roles vacíos
+    if (!keycloak.tokenParsed || !keycloak.authenticated) {
+        return {
+            roles: [],
+            hasRole: () => false,
+            hasAnyRole: () => false,
+            hasAllRoles: () => false,
+            isAdmin: false,
+            isOperator: false,
+            isCommander: false,
+            isPlayback: false,
+            hasCommanderAccess: false,
+            primaryRole: 'Usuario',
+        };
+    }
+
     // Obtener roles del cliente 'commander'
-    const clientRoles = keycloak.tokenParsed?.resource_access?.commander?.roles || [];
+    const clientRoles = keycloak.tokenParsed.resource_access?.commander?.roles || [];
 
     // Funciones para verificar roles específicos
     const hasRole = (role: string) => clientRoles.includes(role);
@@ -17,18 +32,18 @@ export const useUserRoles = () => {
 
     // Verificaciones específicas
     const isAdmin = hasRole('admin');
-    const isOperador = hasRole('operador');
-    const isComandante = hasRole('comandante');
+    const isOperator = hasRole('operator');
+    const isCommander = hasRole('commander');
     const isPlayback = hasRole('playback');
 
     // Verificar si tiene acceso al perfil de comandante (cualquiera de los 3 roles)
-    const hasCommanderAccess = hasAnyRole(['admin', 'operador', 'comandante']);
+    const hasCommanderAccess = hasAnyRole(['admin', 'operator', 'commander']);
 
     // Obtener el rol principal (el primero o el más importante)
     const getPrimaryRole = (): string => {
         if (isAdmin) return 'Administrador';
-        if (isComandante) return 'Comandante';
-        if (isOperador) return 'Operador';
+        if (isCommander) return 'Comandante';
+        if (isOperator) return 'Operador';
         if (isPlayback) return 'Playback';
         return 'Usuario';
     };
@@ -39,8 +54,8 @@ export const useUserRoles = () => {
         hasAnyRole,
         hasAllRoles,
         isAdmin,
-        isOperador,
-        isComandante,
+        isOperator,
+        isCommander,
         isPlayback,
         hasCommanderAccess,
         primaryRole: getPrimaryRole(),

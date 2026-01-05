@@ -21,5 +21,13 @@ export type { AuthMode } from './services/auth.service';
 // Hooks
 export { useUserRoles } from './hooks/useUserRoles';
 
+export {
+    ROLE_PERMISSIONS,
+    hasRouteAccess,
+    hasModuleAccess,
+    getPrimaryRole
+} from './config/rolePermissions';
+export type { UserRole, RolePermissions } from './config/rolePermissions';
+
 // Types
 export type { User, LoginCredentials, AuthContextType } from './types/auth.types';

@@ -1,14 +1,37 @@
 import type { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useAuthStore, selectIsAuthenticated } from '@/features/auth/store/useAuthStore';
+import { useUserRoles } from '@/features/auth/hooks/useUserRoles';
+import { hasRouteAccess } from '@/features/auth/config/rolePermissions';
+import { authService } from '@/features/auth/services/auth.service';
 
 interface ProtectedRouteProps {
     children: ReactNode;
+    allowedRoles?: string[];
 }
 
-export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
     const isAuthenticated = useAuthStore(selectIsAuthenticated);
     const isLoading = useAuthStore((state) => state.isLoading);
+    const logout = useAuthStore((state) => state.logout);
+    const { roles } = useUserRoles();
+    const location = useLocation();
+
+    // Verificar si el estado de Keycloak coincide con el estado del store
+    useEffect(() => {
+        const authMode = authService.getAuthMode();
+
+        if (authMode === 'keycloak' && isAuthenticated) {
+            const keycloak = authService.getKeycloakInstance();
+
+            // Si el store dice autenticado pero Keycloak dice lo contrario, cerrar sesión
+            if (!keycloak.authenticated || !keycloak.token) {
+                console.log('[ProtectedRoute] Desincronización detectada: store autenticado pero Keycloak no. Cerrando sesión...');
+                //logout();
+            }
+        }
+    }, [isAuthenticated, logout]);
 
     if (isLoading) {
         return (
@@ -23,6 +46,49 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
     if (!isAuthenticated) {
         return <Navigate to="/login" replace />;
+    }
+
+    if (allowedRoles && allowedRoles.length > 0) {
+        const hasPermission = allowedRoles.some(role => roles.includes(role));
+
+        if (!hasPermission) {
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
+                    <div className="text-center max-w-md p-8">
+                        <div className="text-6xl mb-4">🔒</div>
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                            Acceso Denegado
+                        </h2>
+                        <p className="text-gray-600 dark:text-gray-400 mb-6">
+                            No tienes permisos para acceder a esta página.
+                        </p>
+                        <Navigate to="/dashboard" replace />
+                    </div>
+                </div>
+            );
+        }
+    }
+
+    if (!hasRouteAccess(roles, location.pathname)) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
+                <div className="text-center max-w-md p-8">
+                    <div className="text-6xl mb-4">🔒</div>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                        Acceso Denegado
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-6">
+                        No tienes permisos para acceder a esta página.
+                    </p>
+                    <button
+                        onClick={() => window.history.back()}
+                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                    >
+                        Volver
+                    </button>
+                </div>
+            </div>
+        );
     }
 
     return <>{children}</>;

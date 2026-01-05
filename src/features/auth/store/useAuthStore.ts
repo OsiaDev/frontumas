@@ -20,11 +20,18 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
     persist(
-        (set, get) => ({
-            // Estado inicial
-            user: null,
-            isLoading: false,
-            error: null,
+        (set, get) => {
+            // Configurar el callback de logout automático
+            authService.setOnLogoutCallback(() => {
+                console.log('[AuthStore] Logout automático detectado desde authService');
+                set({ user: null, error: null });
+            });
+
+            return {
+                // Estado inicial
+                user: null,
+                isLoading: false,
+                error: null,
 
             // Acciones
             login: async (credentials: LoginCredentials) => {
@@ -102,7 +109,8 @@ export const useAuthStore = create<AuthState>()(
                     set({ error: 'Error al inicializar autenticación', isLoading: false });
                 }
             },
-        }),
+            };
+        },
         {
             name: 'auth-storage',
             partialize: (state) => ({ user: state.user }),

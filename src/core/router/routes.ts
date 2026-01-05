@@ -16,7 +16,6 @@ export const ROUTES = {
     MISSIONS_EDIT: '/missions/edit/:id',
     MISSIONS_CONTROL: '/missions/:id/control',
     MISSIONS_PLAYBACK: '/missions/:id/playback',
-    OPERATORS: '/operators',
     USERS: '/users',
     REPORTS: '/reports',
     ANALYTICS: '/analytics',

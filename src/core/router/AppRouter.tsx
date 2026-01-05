@@ -13,7 +13,7 @@ const MissionsListPage = lazy(() => import('@features/missions').then(m => ({ de
 const MissionFormPage = lazy(() => import('@features/missions').then(m => ({ default: m.MissionFormPage })));
 const MissionControlPage = lazy(() => import('@features/mission').then(m => ({ default: m.MissionPage })));
 const MissionPlaybackPage = lazy(() => import('@features/mission').then(m => ({ default: m.MissionPlaybackPage })));
-const OperatorsPage = lazy(() => import('@features/operators').then(m => ({ default: m.OperatorsPage })));
+const UsersPage = lazy(() => import('@features/operators').then(m => ({ default: m.UsersPage })));
 
 // Componente de carga
 const LoadingFallback = () => (
@@ -97,12 +97,12 @@ export const AppRouter = () => {
                 />
 
                 <Route
-                    path={ROUTES.OPERATORS}
+                    path={ROUTES.USERS}
                     element={
                         <ProtectedRoute>
                             <MainLayout>
                                 <Suspense fallback={<LoadingFallback />}>
-                                    <OperatorsPage />
+                                    <UsersPage />
                                 </Suspense>
                             </MainLayout>
                         </ProtectedRoute>
@@ -170,18 +170,6 @@ export const AppRouter = () => {
                                 <Suspense fallback={<LoadingFallback />}>
                                     <MissionPlaybackPage />
                                 </Suspense>
-                            </MainLayout>
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* Rutas en construcción */}
-                <Route
-                    path={ROUTES.USERS}
-                    element={
-                        <ProtectedRoute>
-                            <MainLayout>
-                                <UnderConstruction title="Usuarios" />
                             </MainLayout>
                         </ProtectedRoute>
                     }

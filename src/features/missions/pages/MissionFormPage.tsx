@@ -9,7 +9,7 @@ import { routesApiService } from '@features/routes/services/routes.api.service';
 import { operatorsApiService } from '@features/operators/services/operators.api.service';
 import { RouteMapPreview } from '@features/missions/components/RouteMapPreview';
 import type { CreateMissionDTO, DroneAssignmentRequest } from '@shared/types/mission.types';
-import type { DroneResponseDTO, OperatorResponseDTO } from '@shared/types/api.types';
+import type { DroneResponseDTO } from '@shared/types/api.types';
 import type { Route } from '@shared/types/route.types';
 
 interface DroneAssignmentFormData {
@@ -59,12 +59,12 @@ export const MissionFormPage = () => {
             const [dronesData, routesData, operatorsData] = await Promise.all([
                 dronesApiService.getDrones(),
                 routesApiService.getRoutes(),
-                operatorsApiService.getOperators(),
+                operatorsApiService.getAllOperators(),
             ]);
 
             setDrones(dronesData.map((d: DroneResponseDTO) => ({ id: d.id, name: `${d.vehicleId} - ${d.model}` })));
             setRoutes(routesData.map((r: Route) => ({ id: r.id, name: r.name })));
-            setOperators(operatorsData.map((o: OperatorResponseDTO) => ({ id: o.id, name: o.fullName })));
+            setOperators(operatorsData.map((value) => ({ id: value.id, name: value.fullName })));
 
             if (isEditMode && id) {
                 const mission = getMission(id) || await fetchMissionById(id);

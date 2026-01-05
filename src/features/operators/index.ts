@@ -1,5 +1,5 @@
 // Pages
-export { OperatorsPage } from './pages/OperatorsPage';
+export { UsersPage } from './pages/UsersPage';
 
 // Components
 export { MissionsTable } from './components/MissionsTable';

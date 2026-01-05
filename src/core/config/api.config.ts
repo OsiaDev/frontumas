@@ -7,6 +7,11 @@ export const API_CONFIG = {
     RETRY_DELAY: 1000,
 } as const;
 
+// Configuración de ADConnect (API Gateway)
+export const ADCONNECT_CONFIG = {
+    BASE_URL: import.meta.env.VITE_ADCONNECT_BASE_URL || 'http://192.168.246.10:8080',
+} as const;
+
 export const API_ROUTES = {
     DRONES: {
         LIST: '/v1/drones',
