@@ -26,6 +26,7 @@ const DroneVideoCard = ({
 }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const hlsRef = useRef<Hls | null>(null);
+    const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const [status, setStatus] = useState<DroneVideoStatus>({
         isConnected: false,
         isLoading: true,
@@ -34,6 +35,11 @@ const DroneVideoCard = ({
 
     const hlsUrl = `${MEDIAMTX_HLS_URL}/dron-${drone.vehicleId}/live/index.m3u8`;
 
+    // Usar ref para la URL para evitar recrear funciones
+    const hlsUrlRef = useRef(hlsUrl);
+    hlsUrlRef.current = hlsUrl;
+
+    // Función estable para destruir HLS
     const destroyHls = useCallback(() => {
         if (hlsRef.current) {
             hlsRef.current.destroy();
@@ -41,11 +47,20 @@ const DroneVideoCard = ({
         }
     }, []);
 
+    // Función estable para inicializar HLS usando refs
     const initializeHls = useCallback(() => {
-        if (!videoRef.current) return;
+        const video = videoRef.current;
+        if (!video) return;
 
-        destroyHls();
+        // Limpiar instancia anterior
+        if (hlsRef.current) {
+            hlsRef.current.destroy();
+            hlsRef.current = null;
+        }
+
         setStatus({ isConnected: false, isLoading: true, error: null });
+
+        const currentUrl = hlsUrlRef.current;
 
         if (Hls.isSupported()) {
             const hls = new Hls({
@@ -66,58 +81,74 @@ const DroneVideoCard = ({
 
             hls.on(Hls.Events.MANIFEST_PARSED, () => {
                 setStatus({ isConnected: true, isLoading: false, error: null });
-                videoRef.current?.play().catch(() => {});
+                video.play().catch(() => {});
             });
 
             hls.on(Hls.Events.ERROR, (_event, data) => {
                 if (data.fatal) {
-                    if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-                        setStatus({
-                            isConnected: false,
-                            isLoading: false,
-                            error: 'offline'
-                        });
-                    } else {
-                        setStatus({
-                            isConnected: false,
-                            isLoading: false,
-                            error: 'error'
-                        });
+                    const errorType = data.type === Hls.ErrorTypes.NETWORK_ERROR ? 'offline' : 'error';
+                    setStatus({
+                        isConnected: false,
+                        isLoading: false,
+                        error: errorType
+                    });
+                    if (hlsRef.current) {
+                        hlsRef.current.destroy();
+                        hlsRef.current = null;
                     }
-                    destroyHls();
                 }
             });
 
-            hls.loadSource(hlsUrl);
-            hls.attachMedia(videoRef.current);
+            hls.loadSource(currentUrl);
+            hls.attachMedia(video);
             hlsRef.current = hls;
-        } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
-            videoRef.current.src = hlsUrl;
-            videoRef.current.addEventListener('loadedmetadata', () => {
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = currentUrl;
+            const onLoaded = () => {
                 setStatus({ isConnected: true, isLoading: false, error: null });
-                videoRef.current?.play().catch(() => {});
-            });
-            videoRef.current.addEventListener('error', () => {
+                video.play().catch(() => {});
+            };
+            const onError = () => {
                 setStatus({ isConnected: false, isLoading: false, error: 'offline' });
-            });
+            };
+            video.addEventListener('loadedmetadata', onLoaded, { once: true });
+            video.addEventListener('error', onError, { once: true });
         } else {
             setStatus({ isConnected: false, isLoading: false, error: 'No soportado' });
         }
-    }, [hlsUrl, destroyHls]);
+    }, []); // Sin dependencias - usa refs internamente
 
+    // Inicializar solo al montar, limpiar al desmontar
     useEffect(() => {
         initializeHls();
-        return () => destroyHls();
+        return () => {
+            destroyHls();
+            if (retryTimeoutRef.current) {
+                clearTimeout(retryTimeoutRef.current);
+            }
+        };
     }, [initializeHls, destroyHls]);
 
-    // Reintentar conexión cada 30 segundos si está offline
+    // Reintentar conexión cada 30 segundos si está offline (independiente)
     useEffect(() => {
+        // Limpiar timeout anterior si existe
+        if (retryTimeoutRef.current) {
+            clearTimeout(retryTimeoutRef.current);
+            retryTimeoutRef.current = null;
+        }
+
         if (status.error === 'offline') {
-            const retryInterval = setInterval(() => {
+            retryTimeoutRef.current = setTimeout(() => {
                 initializeHls();
             }, 30000);
-            return () => clearInterval(retryInterval);
         }
+
+        return () => {
+            if (retryTimeoutRef.current) {
+                clearTimeout(retryTimeoutRef.current);
+                retryTimeoutRef.current = null;
+            }
+        };
     }, [status.error, initializeHls]);
 
     const cardClasses = isExpanded
