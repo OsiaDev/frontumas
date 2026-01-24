@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { apiService } from '@shared/services/api.service';
 
 // Estructura interna normalizada para el frontend
 export interface TelemetryPoint {
@@ -49,9 +50,6 @@ interface UsePlaybackTelemetryReturn {
     syncToVideoTime: (videoCurrentTime: number) => void;
     loadTelemetryRange: (startDate: string, endDate: string) => Promise<void>;
 }
-
-// Usar la configuración centralizada que ya incluye /api
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
 /**
  * Normaliza un timestamp del API a formato ISO UTC
@@ -110,15 +108,10 @@ export const usePlaybackTelemetry = ({
         setError(null);
 
         try {
-            const url = `${API_BASE_URL}/telemetry/vehicle/${vehicleId}/range?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
-
-            const response = await fetch(url);
-
-            if (!response.ok) {
-                throw new Error(`Error ${response.status}: ${response.statusText}`);
-            }
-
-            const apiData: ApiTelemetryResponse[] = await response.json();
+            // Usar apiService que incluye el token de autenticación automáticamente
+            const apiData = await apiService.get<ApiTelemetryResponse[]>(
+                `/telemetry/vehicle/${vehicleId}/range?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`
+            );
 
             // Mapear respuesta del API a estructura interna y ordenar por timestamp
             const mappedData = apiData.map(mapApiResponseToTelemetryPoint);

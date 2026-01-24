@@ -6,6 +6,26 @@ const AUTH_MODE_KEY = 'umas_auth_mode';
 
 export type AuthMode = 'keycloak' | 'traditional';
 
+/**
+ * Mapeo de roles de Keycloak a roles internos del sistema
+ * Keycloak usa nombres en inglés, el sistema usa nombres en español
+ */
+const KEYCLOAK_TO_INTERNAL_ROLE: Record<string, string> = {
+    'admin': 'admin',
+    'operator': 'operador',
+    'commander': 'comandante',
+    'playback': 'playback',
+};
+
+/**
+ * Convierte roles de Keycloak a roles internos del sistema
+ */
+const mapKeycloakRoles = (keycloakRoles: string[]): string[] => {
+    return keycloakRoles
+        .map(role => KEYCLOAK_TO_INTERNAL_ROLE[role] || role)
+        .filter(role => role !== undefined);
+};
+
 class AuthService {
     private keycloakInstance = keycloak;
     private isInitialized = false;
@@ -315,12 +335,13 @@ class AuthService {
         }
 
         const tokenParsed = this.keycloakInstance.tokenParsed;
+        const keycloakRoles = tokenParsed.realm_access?.roles || [];
 
         return {
             id: tokenParsed.sub || '',
             username: tokenParsed.preferred_username || '',
             email: tokenParsed.email || '',
-            roles: tokenParsed.realm_access?.roles || [],
+            roles: mapKeycloakRoles(keycloakRoles),
             token: this.keycloakInstance.token || '',
         };
     }

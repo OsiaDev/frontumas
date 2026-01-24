@@ -1,4 +1,25 @@
 import { authService } from '@/features/auth/services/auth.service';
+import type { UserRole } from '@/features/auth/config/rolePermissions';
+
+/**
+ * Mapeo de roles de Keycloak a roles internos del sistema
+ * Keycloak usa nombres en inglés, el sistema usa nombres en español
+ */
+const KEYCLOAK_TO_INTERNAL_ROLE: Record<string, UserRole> = {
+    'admin': 'admin',
+    'operator': 'operador',
+    'commander': 'comandante',
+    'playback': 'playback',
+};
+
+/**
+ * Convierte roles de Keycloak a roles internos del sistema
+ */
+const mapKeycloakRoles = (keycloakRoles: string[]): UserRole[] => {
+    return keycloakRoles
+        .map(role => KEYCLOAK_TO_INTERNAL_ROLE[role])
+        .filter((role): role is UserRole => role !== undefined);
+};
 
 /**
  * Hook personalizado para obtener y validar roles del usuario
@@ -9,55 +30,51 @@ export const useUserRoles = () => {
     // Si no hay token válido, retornar roles vacíos
     if (!keycloak.tokenParsed || !keycloak.authenticated) {
         return {
-            roles: [],
+            roles: [] as UserRole[],
             hasRole: () => false,
             hasAnyRole: () => false,
             hasAllRoles: () => false,
             isAdmin: false,
-            isOperator: false,
-            isCommander: false,
+            isOperador: false,
+            isComandante: false,
             isPlayback: false,
-            hasCommanderAccess: false,
             primaryRole: 'Usuario',
         };
     }
 
-    // Obtener roles del cliente 'commander'
-    const clientRoles = keycloak.tokenParsed.resource_access?.commander?.roles || [];
+    // Obtener roles del cliente 'commander' y mapearlos a roles internos
+    const keycloakRoles = keycloak.tokenParsed.resource_access?.commander?.roles || [];
+    const internalRoles = mapKeycloakRoles(keycloakRoles);
 
-    // Funciones para verificar roles específicos
-    const hasRole = (role: string) => clientRoles.includes(role);
-    const hasAnyRole = (roles: string[]) => roles.some(role => clientRoles.includes(role));
-    const hasAllRoles = (roles: string[]) => roles.every(role => clientRoles.includes(role));
+    // Funciones para verificar roles específicos (usando roles internos)
+    const hasRole = (role: UserRole) => internalRoles.includes(role);
+    const hasAnyRole = (roles: UserRole[]) => roles.some(role => internalRoles.includes(role));
+    const hasAllRoles = (roles: UserRole[]) => roles.every(role => internalRoles.includes(role));
 
-    // Verificaciones específicas
+    // Verificaciones específicas (usando roles internos en español)
     const isAdmin = hasRole('admin');
-    const isOperator = hasRole('operator');
-    const isCommander = hasRole('commander');
+    const isOperador = hasRole('operador');
+    const isComandante = hasRole('comandante');
     const isPlayback = hasRole('playback');
-
-    // Verificar si tiene acceso al perfil de comandante (cualquiera de los 3 roles)
-    const hasCommanderAccess = hasAnyRole(['admin', 'operator', 'commander']);
 
     // Obtener el rol principal (el primero o el más importante)
     const getPrimaryRole = (): string => {
         if (isAdmin) return 'Administrador';
-        if (isCommander) return 'Comandante';
-        if (isOperator) return 'Operador';
+        if (isComandante) return 'Comandante';
+        if (isOperador) return 'Operador';
         if (isPlayback) return 'Playback';
         return 'Usuario';
     };
 
     return {
-        roles: clientRoles,
+        roles: internalRoles,
         hasRole,
         hasAnyRole,
         hasAllRoles,
         isAdmin,
-        isOperator,
-        isCommander,
+        isOperador,
+        isComandante,
         isPlayback,
-        hasCommanderAccess,
         primaryRole: getPrimaryRole(),
     };
 };
