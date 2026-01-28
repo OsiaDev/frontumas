@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Trash2, CheckCircle, PlayCircle, AlertCircle, Clock, FileText, Users, MonitorPlay, Video } from 'lucide-react';
+import { Trash2, CheckCircle, PlayCircle, AlertCircle, Clock, FileText, Users, MonitorPlay, Video, StopCircle, Brain } from 'lucide-react';
 import type { Mission, MissionState } from '@shared/types/mission.types';
 import { hasAnyRoute } from '@shared/types/mission.types';
 
@@ -9,6 +9,8 @@ interface MissionTableProps {
     onExecute?: (mission: Mission) => void;
     onDelete: (mission: Mission) => void;
     onViewDetails?: (mission: Mission) => void;
+    onFinalize?: (mission: Mission) => void;
+    onAnalyzeVideo?: (mission: Mission) => void;
     isLoading?: boolean;
 }
 
@@ -51,6 +53,8 @@ export const MissionTable = ({
     onExecute,
     onDelete,
     onViewDetails,
+    onFinalize,
+    onAnalyzeVideo,
     isLoading = false,
 }: MissionTableProps) => {
     const navigate = useNavigate();
@@ -255,6 +259,18 @@ export const MissionTable = ({
                                             </button>
                                         )}
 
+                                        {/* Botón Finalizar - Para misiones en ejecución (cerrar manualmente por timeout de UGCS) */}
+                                        {mission.state === 'EN_EJECUCION' && onFinalize && (
+                                            <button
+                                                onClick={() => onFinalize(mission)}
+                                                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-orange-600 hover:bg-orange-700 dark:bg-orange-700 dark:hover:bg-orange-600 rounded-md transition-colors"
+                                                title="Finalizar misión manualmente"
+                                            >
+                                                <StopCircle className="w-3 h-3" />
+                                                Finalizar
+                                            </button>
+                                        )}
+
                                         {/* Botón Playback - Para misiones finalizadas */}
                                         {mission.state === 'FINALIZADA' && (
                                             <button
@@ -264,6 +280,18 @@ export const MissionTable = ({
                                             >
                                                 <Video className="w-3 h-3" />
                                                 Playback
+                                            </button>
+                                        )}
+
+                                        {/* Botón Analizar Video con IA - Para misiones finalizadas */}
+                                        {mission.state === 'FINALIZADA' && onAnalyzeVideo && (
+                                            <button
+                                                onClick={() => onAnalyzeVideo(mission)}
+                                                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-600 rounded-md transition-colors"
+                                                title="Analizar video con IA (YOLO)"
+                                            >
+                                                <Brain className="w-3 h-3" />
+                                                Analizar IA
                                             </button>
                                         )}
 

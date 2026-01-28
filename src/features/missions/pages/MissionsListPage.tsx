@@ -16,6 +16,8 @@ export const MissionsListPage = () => {
         deleteMission,
         approveMission,
         executeMission,
+        finalizeMission,
+        analyzeVideoWithAI,
     } = useMissionsApi();
 
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -87,6 +89,40 @@ export const MissionsListPage = () => {
 
     const handleViewDetails = (mission: Mission) => {
         navigate(`/missions/edit/${mission.id}`);
+    };
+
+    const handleFinalize = async (mission: Mission) => {
+        // Primera confirmación
+        if (!window.confirm(`¿Está seguro que desea finalizar la misión "${mission.name}"?\n\nEsta acción cerrará manualmente la misión que quedó en ejecución.`)) {
+            return;
+        }
+
+        // Segunda confirmación (doble confirmación requerida)
+        if (!window.confirm(`⚠️ CONFIRMACIÓN FINAL\n\n¿Realmente desea finalizar la misión "${mission.name}"?\n\nEsta acción no se puede deshacer.`)) {
+            return;
+        }
+
+        try {
+            await finalizeMission(mission.id);
+            alert(`Misión "${mission.name}" finalizada exitosamente.`);
+        } catch (error) {
+            console.error('Error al finalizar misión:', error);
+            alert('Error al finalizar la misión. Por favor, intente nuevamente.');
+        }
+    };
+
+    const handleAnalyzeVideo = async (mission: Mission) => {
+        if (!window.confirm(`¿Iniciar análisis de video con IA para la misión "${mission.name}"?\n\nEl análisis puede ejecutarse múltiples veces si el video aún no ha terminado de guardarse.`)) {
+            return;
+        }
+
+        try {
+            const result = await analyzeVideoWithAI(mission.id);
+            alert(`Análisis de video iniciado.\n\n${result.message || 'El proceso de análisis con YOLO ha comenzado.'}`);
+        } catch (error) {
+            console.error('Error al analizar video:', error);
+            alert('Error al iniciar el análisis de video. Por favor, intente nuevamente.');
+        }
     };
 
     const missionsList = Object.values(missions);
@@ -169,6 +205,8 @@ export const MissionsListPage = () => {
                     onExecute={handleExecute}
                     onDelete={handleDelete}
                     onViewDetails={handleViewDetails}
+                    onFinalize={handleFinalize}
+                    onAnalyzeVideo={handleAnalyzeVideo}
                     isLoading={isLoading}
                 />
             </div>

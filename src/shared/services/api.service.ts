@@ -27,6 +27,14 @@ class ApiService {
                 if (token) {
                     config.headers.Authorization = `Bearer ${token}`;
                 }
+
+                // Agregar headers X-User-Id y X-User-Roles requeridos por el backend
+                const user = authService.getStoredUser();
+                if (user) {
+                    config.headers['X-User-Id'] = user.id;
+                    config.headers['X-User-Roles'] = user.roles.join(',');
+                }
+
                 return config;
             },
             (error) => {

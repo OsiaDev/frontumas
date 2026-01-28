@@ -131,6 +131,31 @@ class MissionsApiService {
         }
     }
 
+    /**
+     * Finalizar manualmente una misión que quedó en ejecución por errores de timeout de UGCS
+     */
+    async finalizeMission(id: string): Promise<Mission> {
+        try {
+            return await apiService.post<Mission>(API_ROUTES.MISSIONS.FINALIZE(id));
+        } catch (error) {
+            console.error(`Error finalizando misión ${id}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Disparar análisis de video con IA (YOLO)
+     * Puede ejecutarse múltiples veces si MediaMTX no ha terminado de guardar el video
+     */
+    async analyzeVideoWithAI(id: string): Promise<{ status: string; message: string }> {
+        try {
+            return await apiService.post<{ status: string; message: string }>(API_ROUTES.MISSIONS.ANALYZE_VIDEO(id));
+        } catch (error) {
+            console.error(`Error analizando video de misión ${id}:`, error);
+            throw error;
+        }
+    }
+
 }
 
 export const missionsApiService = new MissionsApiService();
