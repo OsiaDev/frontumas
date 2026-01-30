@@ -51,6 +51,8 @@ export const API_ROUTES = {
         CREATE: '/v1/missions',
         APPROVE: (id: string) => `/v1/missions/approve/${id}`,
         EXECUTE: (id: string) => `/v1/missions/execute/${id}`,
+        FINALIZE: (id: string) => `/v1/missions/${id}/finalize`,
+        ANALYZE_VIDEO: '/v1/playback/analyze',
         DELETE: (id: string) => `/v1/missions/${id}`,
     },
     OPERATORS: {

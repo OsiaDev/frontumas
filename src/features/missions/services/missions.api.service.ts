@@ -1,5 +1,6 @@
 import { API_ROUTES } from '@core/config/api.config';
 import type { Mission, CreateMissionDTO, ApproveMissionDTO, ExecuteMissionDTO, UpdateMissionDTO, MissionStatus } from '@shared/types/mission.types';
+import type { VideoTrack } from '@shared/types/detection.types';
 import {apiService} from "@shared/services/api.service.ts";
 
 class MissionsApiService {
@@ -127,6 +128,46 @@ class MissionsApiService {
             return await apiService.post<Mission>(`v1/missions/${id}/cancel`);
         } catch (error) {
             console.error(`Error cancelando misión ${id}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Finalizar manualmente una misión que quedó en ejecución por errores de timeout de UGCS
+     */
+    async finalizeMission(id: string): Promise<Mission> {
+        try {
+            return await apiService.post<Mission>(API_ROUTES.MISSIONS.FINALIZE(id));
+        } catch (error) {
+            console.error(`Error finalizando misión ${id}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Disparar análisis de video con IA (YOLO)
+     * Puede ejecutarse múltiples veces si MediaMTX no ha terminado de guardar el video
+     */
+    async analyzeVideoWithAI(id: string): Promise<{ status: string; message: string }> {
+        try {
+            return await apiService.post<{ status: string; message: string }>(
+                API_ROUTES.MISSIONS.ANALYZE_VIDEO,
+                { missionId: id }
+            );
+        } catch (error) {
+            console.error(`Error analizando video de misión ${id}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Obtener las detecciones (tracks) de video para una misión
+     */
+    async getVideoTracks(missionId: string): Promise<VideoTrack[]> {
+        try {
+            return await apiService.get<VideoTrack[]>(`v1/playback/${missionId}/tracks`);
+        } catch (error) {
+            console.error(`Error obteniendo detecciones de video para misión ${missionId}:`, error);
             throw error;
         }
     }

@@ -6,15 +6,41 @@ const AUTH_MODE_KEY = 'umas_auth_mode';
 
 export type AuthMode = 'keycloak' | 'traditional';
 
+/**
+ * Mapeo de roles de Keycloak a roles internos del sistema
+ * Keycloak usa nombres en inglés, el sistema usa nombres en español
+ */
+const KEYCLOAK_TO_INTERNAL_ROLE: Record<string, string> = {
+    'admin': 'admin',
+    'operator': 'operador',
+    'commander': 'comandante',
+    'playback': 'playback',
+};
+
+/**
+ * Convierte roles de Keycloak a roles internos del sistema
+ * Si el rol no está en el mapeo, se mantiene tal cual (excepto default-roles-*)
+ */
+const mapKeycloakRoles = (keycloakRoles: string[]): string[] => {
+    return keycloakRoles
+        .filter(role => !role.startsWith('default-roles-')) // Filtrar roles por defecto de Keycloak
+        .map(role => {
+            const lowercaseRole = role.toLowerCase();
+            return KEYCLOAK_TO_INTERNAL_ROLE[lowercaseRole] || role;
+        })
+        .filter(role => role !== undefined && role.trim() !== '');
+};
+
 class AuthService {
     private keycloakInstance = keycloak;
     private isInitialized = false;
     private initializationPromise: Promise<boolean> | null = null;
     private onLogoutCallback: (() => void) | null = null;
 
-    // Verificar si estamos en un contexto seguro (HTTPS o localhost)
-    private isSecureContext(): boolean {
-        return window.isSecureContext || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    // Verificar si Web Crypto API está disponible (necesario para PKCE)
+    // En navegadores modernos está disponible incluso en HTTP para redes locales
+    private isWebCryptoAvailable(): boolean {
+        return !!(window.crypto && window.crypto.subtle);
     }
 
     // Obtener el modo de autenticación actual
@@ -59,7 +85,7 @@ class AuthService {
                     checkLoginIframe: false, // Deshabilitar iframe check para evitar problemas de CORS
                 };
 
-                if (this.isSecureContext()) {
+                if (this.isWebCryptoAvailable()) {
                     initOptions.pkceMethod = 'S256';
                 }
 
@@ -136,32 +162,13 @@ class AuthService {
                 this.isInitialized = true;
             }
 
-            // Verificar si estamos en contexto seguro (HTTPS o localhost)
-            // Si no, mostrar error explicativo porque PKCE requiere Web Crypto API
-            if (!this.isSecureContext()) {
-                console.warn('[Keycloak] No estamos en contexto seguro (HTTPS). Keycloak PKCE requiere Web Crypto API.');
-                console.warn('[Keycloak] Opciones: 1) Usar HTTPS, 2) Acceder via localhost, 3) Deshabilitar PKCE en Keycloak Admin Console');
-
-                // Intentar login sin PKCE usando redirect directo al endpoint de Keycloak
-                const keycloakUrl = 'http://192.168.246.10';
-                const realm = 'umas';
-                const clientId = 'commander';
-                const redirectUri = encodeURIComponent(window.location.origin + '/dashboard');
-
-                // Construir URL de autorización sin PKCE
-                const authUrl = `${keycloakUrl}/realms/${realm}/protocol/openid-connect/auth?` +
-                    `client_id=${clientId}&` +
-                    `redirect_uri=${redirectUri}&` +
-                    `response_type=code&` +
-                    `scope=openid`;
-
-                window.location.href = authUrl;
-
-                // Esta promesa nunca se resolverá porque redirigimos
-                return new Promise(() => {});
+            // Verificar si Web Crypto API está disponible (necesario para PKCE)
+            if (!this.isWebCryptoAvailable()) {
+                console.error('[Keycloak] Web Crypto API no disponible. PKCE no funcionará.');
+                throw new Error('Web Crypto API no disponible. Usa un navegador moderno o accede via HTTPS.');
             }
 
-            // Redirigir al login de Keycloak (contexto seguro - usa PKCE)
+            // Redirigir al login de Keycloak (usa PKCE)
             await this.keycloakInstance.login();
 
             // Después del login, obtener datos del usuario
@@ -204,7 +211,7 @@ class AuthService {
                     checkLoginIframe: false,
                 };
 
-                if (this.isSecureContext()) {
+                if (this.isWebCryptoAvailable()) {
                     initOptions.pkceMethod = 'S256';
                 }
 
@@ -334,11 +341,36 @@ class AuthService {
 
         const tokenParsed = this.keycloakInstance.tokenParsed;
 
+        // Log completo del token para debug
+        console.log('[Keycloak] Token completo:', tokenParsed);
+
+        console.log(tokenParsed)
+        // Extraer roles de realm_access
+        const realmRoles = tokenParsed.realm_access?.roles || [];
+        console.log('[Keycloak] Realm roles:', realmRoles);
+
+        // Extraer roles de resource_access (roles de cliente)
+        const resourceAccess = tokenParsed.resource_access || {};
+        console.log('[Keycloak] Resource access:', resourceAccess);
+
+        // Combinar todos los roles de todos los clientes
+        const clientRoles: string[] = [];
+        Object.keys(resourceAccess).forEach(clientId => {
+            const roles = resourceAccess[clientId]?.roles || [];
+            console.log(`[Keycloak] Roles del cliente '${clientId}':`, roles);
+            clientRoles.push(...roles);
+        });
+
+        // Combinar realm roles y client roles
+        const allRoles = [...realmRoles, ...clientRoles];
+        console.log('[Keycloak] Todos los roles:', allRoles);
+        console.log('[Keycloak] Roles mapeados:', mapKeycloakRoles(allRoles));
+
         return {
             id: tokenParsed.sub || '',
             username: tokenParsed.preferred_username || '',
             email: tokenParsed.email || '',
-            roles: tokenParsed.realm_access?.roles || [],
+            roles: mapKeycloakRoles(allRoles),
             token: this.keycloakInstance.token || '',
         };
     }
