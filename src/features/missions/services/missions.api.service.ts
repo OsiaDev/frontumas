@@ -165,7 +165,7 @@ class MissionsApiService {
      */
     async getVideoTracks(missionId: string): Promise<VideoTrack[]> {
         try {
-            return await apiService.get<VideoTrack[]>(`/api/v1/playback/${missionId}/tracks`);
+            return await apiService.get<VideoTrack[]>(`v1/playback/${missionId}/tracks`);
         } catch (error) {
             console.error(`Error obteniendo detecciones de video para misión ${missionId}:`, error);
             throw error;
