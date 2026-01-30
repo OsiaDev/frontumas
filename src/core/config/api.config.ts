@@ -52,7 +52,7 @@ export const API_ROUTES = {
         APPROVE: (id: string) => `/v1/missions/approve/${id}`,
         EXECUTE: (id: string) => `/v1/missions/execute/${id}`,
         FINALIZE: (id: string) => `/v1/missions/${id}/finalize`,
-        ANALYZE_VIDEO: (id: string) => `/v1/missions/${id}/analyze-video`,
+        ANALYZE_VIDEO: '/v1/playback/analyze',
         DELETE: (id: string) => `/v1/missions/${id}`,
     },
     OPERATORS: {

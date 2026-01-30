@@ -149,7 +149,10 @@ class MissionsApiService {
      */
     async analyzeVideoWithAI(id: string): Promise<{ status: string; message: string }> {
         try {
-            return await apiService.post<{ status: string; message: string }>(API_ROUTES.MISSIONS.ANALYZE_VIDEO(id));
+            return await apiService.post<{ status: string; message: string }>(
+                API_ROUTES.MISSIONS.ANALYZE_VIDEO,
+                { missionId: id }
+            );
         } catch (error) {
             console.error(`Error analizando video de misión ${id}:`, error);
             throw error;

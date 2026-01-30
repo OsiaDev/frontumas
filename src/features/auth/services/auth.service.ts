@@ -19,11 +19,16 @@ const KEYCLOAK_TO_INTERNAL_ROLE: Record<string, string> = {
 
 /**
  * Convierte roles de Keycloak a roles internos del sistema
+ * Si el rol no está en el mapeo, se mantiene tal cual (excepto default-roles-*)
  */
 const mapKeycloakRoles = (keycloakRoles: string[]): string[] => {
     return keycloakRoles
-        .map(role => KEYCLOAK_TO_INTERNAL_ROLE[role] || role)
-        .filter(role => role !== undefined);
+        .filter(role => !role.startsWith('default-roles-')) // Filtrar roles por defecto de Keycloak
+        .map(role => {
+            const lowercaseRole = role.toLowerCase();
+            return KEYCLOAK_TO_INTERNAL_ROLE[lowercaseRole] || role;
+        })
+        .filter(role => role !== undefined && role.trim() !== '');
 };
 
 class AuthService {
@@ -335,13 +340,37 @@ class AuthService {
         }
 
         const tokenParsed = this.keycloakInstance.tokenParsed;
-        const keycloakRoles = tokenParsed.realm_access?.roles || [];
+
+        // Log completo del token para debug
+        console.log('[Keycloak] Token completo:', tokenParsed);
+
+        console.log(tokenParsed)
+        // Extraer roles de realm_access
+        const realmRoles = tokenParsed.realm_access?.roles || [];
+        console.log('[Keycloak] Realm roles:', realmRoles);
+
+        // Extraer roles de resource_access (roles de cliente)
+        const resourceAccess = tokenParsed.resource_access || {};
+        console.log('[Keycloak] Resource access:', resourceAccess);
+
+        // Combinar todos los roles de todos los clientes
+        const clientRoles: string[] = [];
+        Object.keys(resourceAccess).forEach(clientId => {
+            const roles = resourceAccess[clientId]?.roles || [];
+            console.log(`[Keycloak] Roles del cliente '${clientId}':`, roles);
+            clientRoles.push(...roles);
+        });
+
+        // Combinar realm roles y client roles
+        const allRoles = [...realmRoles, ...clientRoles];
+        console.log('[Keycloak] Todos los roles:', allRoles);
+        console.log('[Keycloak] Roles mapeados:', mapKeycloakRoles(allRoles));
 
         return {
             id: tokenParsed.sub || '',
             username: tokenParsed.preferred_username || '',
             email: tokenParsed.email || '',
-            roles: mapKeycloakRoles(keycloakRoles),
+            roles: mapKeycloakRoles(allRoles),
             token: this.keycloakInstance.token || '',
         };
     }
