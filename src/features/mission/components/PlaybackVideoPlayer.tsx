@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import {
     Play,
     Pause,
@@ -18,12 +18,16 @@ interface PlaybackVideoPlayerProps {
     onSeek?: (time: number) => void;
 }
 
-export const PlaybackVideoPlayer = ({
+export interface PlaybackVideoPlayerRef {
+    seekTo: (time: number) => void;
+}
+
+export const PlaybackVideoPlayer = forwardRef<PlaybackVideoPlayerRef, PlaybackVideoPlayerProps>(({
     videoUrl,
     title = 'Reproducción de Misión',
     onTimeUpdate,
     onSeek
-}: PlaybackVideoPlayerProps) => {
+}, ref) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const progressRef = useRef<HTMLDivElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -133,6 +137,11 @@ export const PlaybackVideoPlayer = ({
         videoRef.current.currentTime = clampedTime;
         onSeek?.(clampedTime);
     }, [duration, onSeek]);
+
+    // Exponer método seekTo para uso externo
+    useImperativeHandle(ref, () => ({
+        seekTo: seek
+    }), [seek]);
 
     const skipBackward = useCallback(() => seek(currentTime - 10), [currentTime, seek]);
     const skipForward = useCallback(() => seek(currentTime + 10), [currentTime, seek]);
@@ -308,4 +317,6 @@ export const PlaybackVideoPlayer = ({
             </div>
         </div>
     );
-};
+});
+
+PlaybackVideoPlayer.displayName = 'PlaybackVideoPlayer';

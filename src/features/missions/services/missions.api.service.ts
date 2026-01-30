@@ -1,5 +1,6 @@
 import { API_ROUTES } from '@core/config/api.config';
 import type { Mission, CreateMissionDTO, ApproveMissionDTO, ExecuteMissionDTO, UpdateMissionDTO, MissionStatus } from '@shared/types/mission.types';
+import type { VideoTrack } from '@shared/types/detection.types';
 import {apiService} from "@shared/services/api.service.ts";
 
 class MissionsApiService {
@@ -155,6 +156,18 @@ class MissionsApiService {
             );
         } catch (error) {
             console.error(`Error analizando video de misión ${id}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Obtener las detecciones (tracks) de video para una misión
+     */
+    async getVideoTracks(missionId: string): Promise<VideoTrack[]> {
+        try {
+            return await apiService.get<VideoTrack[]>(`/api/v1/playback/${missionId}/tracks`);
+        } catch (error) {
+            console.error(`Error obteniendo detecciones de video para misión ${missionId}:`, error);
             throw error;
         }
     }
