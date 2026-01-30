@@ -27,6 +27,9 @@ class ApiService {
                 if (token) {
                     config.headers.Authorization = `Bearer ${token}`;
                 }
+                if (config.data instanceof FormData) {
+                    delete config.headers['Content-Type'];
+                }
                 return config;
             },
             (error) => {
@@ -45,7 +48,7 @@ class ApiService {
                     // Handle specific status codes
                     switch (status) {
                         case 401:
-                            authService.logout();
+                            await authService.logout();
                             window.location.href = '/login';
                             throw createApiError(401, ERROR_MESSAGES.SESSION_EXPIRED);
 
@@ -99,13 +102,7 @@ class ApiService {
      * Axios maneja automáticamente el Content-Type para multipart/form-data
      */
     async uploadFile<T>(url: string, formData: FormData, config?: AxiosRequestConfig): Promise<T> {
-        const response = await this.api.post<T>(url, formData, {
-            ...config,
-            headers: {
-                // No establecer Content-Type - Axios lo hace automáticamente
-                ...config?.headers,
-            },
-        });
+        const response = await this.api.post<T>(url, formData, config);
         return response.data;
     }
 
