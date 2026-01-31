@@ -174,7 +174,7 @@ export const MissionPlaybackPage = () => {
 
     // Estado del playback
     const [currentVideoTime, setCurrentVideoTime] = useState(0);
-    const [_videoDuration, setVideoDuration] = useState(0);
+    const [videoDuration, setVideoDuration] = useState(0);
 
     // Cargar datos de la misión
     useEffect(() => {
@@ -236,6 +236,7 @@ export const MissionPlaybackPage = () => {
     }, [missionId]);
 
     // Hook de telemetría sincronizada
+    // Solo se habilita cuando tenemos la duración del video (> 0)
     const {
         telemetryData,
         currentTelemetry,
@@ -245,7 +246,8 @@ export const MissionPlaybackPage = () => {
     } = usePlaybackTelemetry({
         vehicleId,
         videoStartTimestamp,
-        enabled: !!mission && !!vehicleId
+        videoDurationSeconds: videoDuration,
+        enabled: !!mission && !!vehicleId && videoDuration > 0
     });
 
     // Callback para actualización de tiempo del video
