@@ -3,7 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuthStore, selectIsAuthenticated } from '@/features/auth/store/useAuthStore';
 import { useUserRoles } from '@/features/auth/hooks/useUserRoles';
-import { hasRouteAccess } from '@/features/auth/config/rolePermissions';
+import { hasRouteAccess, getInitialRoute } from '@/features/auth/config/rolePermissions';
 import { authService } from '@/features/auth/services/auth.service';
 
 interface ProtectedRouteProps {
@@ -70,33 +70,12 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     }
 
     if (!hasRouteAccess(roles, location.pathname)) {
-        // Si el usuario no tiene acceso al dashboard, cerrar sesión automáticamente
-        // Esto evita que quede atrapado en un bucle de acceso denegado
-        if (location.pathname === '/dashboard') {
-            console.log('[ProtectedRoute] Usuario sin acceso al dashboard. Cerrando sesión...');
-            logout();
-            return <Navigate to="/login" replace />;
-        }
+        // Obtener la ruta inicial según el rol del usuario
+        const initialRoute = getInitialRoute(roles);
 
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
-                <div className="text-center max-w-md p-8">
-                    <div className="text-6xl mb-4">🔒</div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                        Acceso Denegado
-                    </h2>
-                    <p className="text-gray-600 dark:text-gray-400 mb-6">
-                        No tienes permisos para acceder a esta página.
-                    </p>
-                    <button
-                        onClick={() => window.history.back()}
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-                    >
-                        Volver
-                    </button>
-                </div>
-            </div>
-        );
+        // Redirigir a la ruta inicial del rol
+        console.log(`[ProtectedRoute] Usuario sin acceso a ${location.pathname}. Redirigiendo a ${initialRoute}...`);
+        return <Navigate to={initialRoute} replace />;
     }
 
     return <>{children}</>;
