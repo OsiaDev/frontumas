@@ -188,6 +188,37 @@ export const useMissionsApi = () => {
         }
     }, [updateMissionInStore, setLoading, setError]);
 
+    const finalizeMission = useCallback(async (id: string) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const mission = await missionsApiService.finalizeMission(id);
+            updateMissionInStore(id, mission);
+            return mission;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Error al finalizar misión';
+            setError(errorMessage);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    }, [updateMissionInStore, setLoading, setError]);
+
+    const analyzeVideoWithAI = useCallback(async (id: string) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const result = await missionsApiService.analyzeVideoWithAI(id);
+            return result;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Error al analizar video con IA';
+            setError(errorMessage);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    }, [setLoading, setError]);
+
     return {
         fetchMissions,
         fetchMissionById,
@@ -200,5 +231,7 @@ export const useMissionsApi = () => {
         deleteMission,
         approveMission,
         executeMission,
+        finalizeMission,
+        analyzeVideoWithAI,
     };
 };

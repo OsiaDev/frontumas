@@ -1,8 +1,9 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Video, Clock, Calendar, Gauge, Navigation, Battery, Mountain, AlertCircle } from 'lucide-react';
-import { PlaybackVideoPlayer } from '@/features/mission/components/PlaybackVideoPlayer';
+import { PlaybackVideoPlayer, PlaybackVideoPlayerRef } from '@/features/mission/components/PlaybackVideoPlayer';
 import { PlaybackMap } from '@/features/mission/components/PlaybackMap';
+import { DetectionsList } from '@/features/mission/components/DetectionsList';
 import {
     usePlaybackTelemetry,
     TelemetryPoint
@@ -11,6 +12,7 @@ import { missionsApiService } from '@features/missions/services/missions.api.ser
 import { routesApiService } from '@features/routes/services/routes.api.service';
 import type { Mission } from '@shared/types/mission.types';
 import type { Route } from '@shared/types/route.types';
+import type { VideoTrack } from '@shared/types/detection.types';
 
 // URL base para videos grabados por misión (nginx proxy con playback)
 const RECORDINGS_BASE_URL = import.meta.env.VITE_RECORDINGS_URL || 'http://localhost:8090';
@@ -140,12 +142,17 @@ const TelemetryPanel = ({ telemetry, videoTime }: TelemetryPanelProps) => {
 export const MissionPlaybackPage = () => {
     const { id: missionId } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const videoPlayerRef = useRef<PlaybackVideoPlayerRef>(null);
 
     // Estado para datos de la misión
     const [mission, setMission] = useState<Mission | null>(null);
     const [route, setRoute] = useState<Route | null>(null);
     const [isLoadingMission, setIsLoadingMission] = useState(true);
     const [missionError, setMissionError] = useState<string | null>(null);
+
+    // Estado para detecciones de video
+    const [videoTracks, setVideoTracks] = useState<VideoTrack[]>([]);
+    const [isLoadingTracks, setIsLoadingTracks] = useState(false);
 
     // Datos del dron seleccionado (primer dron de la misión)
     const selectedDrone = mission?.assignedDrones?.[0];
@@ -208,6 +215,26 @@ export const MissionPlaybackPage = () => {
         loadMissionData();
     }, [missionId]);
 
+    // Cargar detecciones de video cuando la misión esté cargada
+    useEffect(() => {
+        const loadVideoTracks = async () => {
+            if (!missionId) return;
+
+            setIsLoadingTracks(true);
+            try {
+                const tracks = await missionsApiService.getVideoTracks(missionId);
+                setVideoTracks(tracks);
+            } catch (err) {
+                console.warn('No se pudieron cargar las detecciones de video:', err);
+                setVideoTracks([]);
+            } finally {
+                setIsLoadingTracks(false);
+            }
+        };
+
+        loadVideoTracks();
+    }, [missionId]);
+
     // Hook de telemetría sincronizada
     const {
         telemetryData,
@@ -232,6 +259,13 @@ export const MissionPlaybackPage = () => {
     const handleSeek = useCallback((time: number) => {
         syncToVideoTime(time);
     }, [syncToVideoTime]);
+
+    // Handler para cuando se selecciona una detección
+    const handleTrackSelect = useCallback((track: VideoTrack) => {
+        if (videoPlayerRef.current) {
+            videoPlayerRef.current.seekTo(track.startTimeSeconds);
+        }
+    }, []);
 
     // Formatear timestamp para mostrar
     const formatRecordingDate = (timestamp: number): string => {
@@ -346,13 +380,14 @@ export const MissionPlaybackPage = () => {
                 </div>
             </div>
 
-            {/* Main Content - Video izquierda (grande), Telemetría+Mapa derecha */}
+            {/* Main Content - Grid de 3 columnas: Video (izq), Detecciones (centro), Telemetría+Mapa (der) */}
             <div className="px-6 pb-6">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-220px)] min-h-[500px]">
-                    {/* Video Player - 8/12 del espacio (izquierda) */}
-                    <div className="lg:col-span-8 h-full">
+                    {/* Video Player - 6/12 del espacio (izquierda) */}
+                    <div className="lg:col-span-6 h-full">
                         {videoUrl ? (
                             <PlaybackVideoPlayer
+                                ref={videoPlayerRef}
                                 videoUrl={videoUrl}
                                 title={`Grabación - ${vehicleId}`}
                                 onTimeUpdate={handleTimeUpdate}
@@ -368,8 +403,26 @@ export const MissionPlaybackPage = () => {
                         )}
                     </div>
 
+                    {/* Panel central - Lista de Detecciones */}
+                    <div className="lg:col-span-3 h-full">
+                        {isLoadingTracks ? (
+                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow h-full flex items-center justify-center">
+                                <div className="text-center">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Cargando detecciones...</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <DetectionsList
+                                tracks={videoTracks}
+                                onTrackSelect={handleTrackSelect}
+                                currentVideoTime={currentVideoTime}
+                            />
+                        )}
+                    </div>
+
                     {/* Panel derecho - Telemetría arriba, Mapa abajo */}
-                    <div className="lg:col-span-4 flex flex-col gap-3 h-full">
+                    <div className="lg:col-span-3 flex flex-col gap-3 h-full">
                         {/* Telemetry Panel - altura fija */}
                         <div className="flex-shrink-0">
                             <TelemetryPanel

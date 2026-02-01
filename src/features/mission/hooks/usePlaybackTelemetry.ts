@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import {apiService} from "@shared/services/api.service.ts";
+import { apiService } from '@shared/services/api.service';
 
 // Estructura interna normalizada para el frontend
 export interface TelemetryPoint {
