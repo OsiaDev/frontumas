@@ -109,11 +109,12 @@ export const usePlaybackTelemetry = ({
         setIsLoading(true);
         setError(null);
 
+        const url = `/telemetry/vehicle/${vehicleId}/range?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
+        console.log('[Telemetry] API Request URL:', url);
+
         try {
             // Usar apiService que incluye el token de autenticación automáticamente
-            const apiData = await apiService.get<ApiTelemetryResponse[]>(
-                `/telemetry/vehicle/${vehicleId}/range?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`
-            );
+            const apiData = await apiService.get<ApiTelemetryResponse[]>(url);
 
             // Mapear respuesta del API a estructura interna y ordenar por timestamp
             const mappedData = apiData.map(mapApiResponseToTelemetryPoint);
@@ -205,17 +206,23 @@ export const usePlaybackTelemetry = ({
         const startDate = new Date(videoStartTimestamp);
         const endDate = new Date(videoStartTimestamp + (videoDurationSeconds * 1000) + 60000); // +60s de margen
 
+        // Formatear fechas para el backend (LocalDateTime sin timezone)
+        // El backend espera formato: yyyy-MM-dd'T'HH:mm:ss (sin 'Z', sin milisegundos)
+        const formatForBackend = (date: Date): string => {
+            return date.toISOString().replace('Z', '').split('.')[0];
+        };
+
+        const startDateStr = formatForBackend(startDate);
+        const endDateStr = formatForBackend(endDate);
+
         console.log('[Telemetry] Loading range:', {
             vehicleId,
-            startDate: startDate.toISOString(),
-            endDate: endDate.toISOString(),
+            startDate: startDateStr,
+            endDate: endDateStr,
             videoDurationSeconds
         });
 
-        loadTelemetryRange(
-            startDate.toISOString(),
-            endDate.toISOString()
-        );
+        loadTelemetryRange(startDateStr, endDateStr);
     }, [enabled, vehicleId, videoStartTimestamp, videoDurationSeconds, loadTelemetryRange]);
 
     return {

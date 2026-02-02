@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Target, Clock, Camera, ChevronRight } from 'lucide-react';
 import type { VideoTrack } from '@shared/types/detection.types';
 
@@ -26,14 +27,35 @@ export const DetectionsList = ({ tracks, onTrackSelect, currentVideoTime }: Dete
         return currentVideoTime >= track.startTimeSeconds && currentVideoTime <= track.endTimeSeconds;
     };
 
-    // Agrupar tracks por className
-    const groupedTracks = tracks.reduce((acc, track) => {
-        if (!acc[track.className]) {
-            acc[track.className] = [];
-        }
-        acc[track.className].push(track);
-        return acc;
-    }, {} as Record<string, VideoTrack[]>);
+    // Deduplicar y agrupar tracks (memoizado para evitar recálculos)
+    const { deduplicatedTracks, groupedTracks } = useMemo(() => {
+        // Deduplicar por trackId + className (evitar registros repetidos)
+        const uniqueTracks = tracks.reduce((acc, track) => {
+            const key = `${track.className}-${track.trackId}`;
+            if (!acc.has(key)) {
+                acc.set(key, track);
+            }
+            return acc;
+        }, new Map<string, VideoTrack>());
+
+        const deduplicated = Array.from(uniqueTracks.values());
+
+        // Agrupar por className y ordenar por tiempo de inicio
+        const grouped = deduplicated.reduce((acc, track) => {
+            if (!acc[track.className]) {
+                acc[track.className] = [];
+            }
+            acc[track.className].push(track);
+            return acc;
+        }, {} as Record<string, VideoTrack[]>);
+
+        // Ordenar tracks dentro de cada grupo por tiempo de inicio
+        Object.values(grouped).forEach(group => {
+            group.sort((a, b) => a.startTimeSeconds - b.startTimeSeconds);
+        });
+
+        return { deduplicatedTracks: deduplicated, groupedTracks: grouped };
+    }, [tracks]);
 
     const classColors: Record<string, { bg: string; text: string; icon: string }> = {
         'person': {
@@ -92,7 +114,7 @@ export const DetectionsList = ({ tracks, onTrackSelect, currentVideoTime }: Dete
         return translations[className.toLowerCase()] || className;
     };
 
-    if (tracks.length === 0) {
+    if (deduplicatedTracks.length === 0) {
         return (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 h-full flex items-center justify-center">
                 <p className="text-gray-500 dark:text-gray-400 text-sm text-center">
@@ -103,22 +125,22 @@ export const DetectionsList = ({ tracks, onTrackSelect, currentVideoTime }: Dete
     }
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow h-full flex flex-col">
-            {/* Header */}
-            <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow h-full flex flex-col overflow-hidden">
+            {/* Header - altura fija */}
+            <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                 <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wide flex items-center gap-2">
                         <Target className="w-4 h-4 text-blue-500" />
                         Detecciones IA
                     </h3>
                     <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded font-medium">
-                        {tracks.length} tracks
+                        {deduplicatedTracks.length} tracks
                     </span>
                 </div>
             </div>
 
-            {/* Lista scrolleable */}
-            <div className="flex-1 overflow-y-auto">
+            {/* Lista scrolleable con scroll suave */}
+            <div className="flex-1 overflow-y-auto scroll-smooth min-h-0">
                 <div className="p-3 space-y-3">
                     {Object.entries(groupedTracks).map(([className, classTracks]) => {
                         const style = getClassStyle(className);
@@ -135,62 +157,49 @@ export const DetectionsList = ({ tracks, onTrackSelect, currentVideoTime }: Dete
                                 </span>
                             </div>
 
-                            {/* Tracks de esta clase */}
+                            {/* Tracks de esta clase - diseño compacto */}
                             {classTracks.map((track) => {
                                 const active = isTrackActive(track);
                                 return (
                                     <button
                                         key={track.id}
                                         onClick={() => onTrackSelect(track)}
-                                        className={`w-full text-left p-3 rounded-lg transition-all ${
+                                        className={`w-full text-left px-3 py-2 rounded-lg transition-all ${
                                             active
-                                                ? 'bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500 shadow-md'
-                                                : 'bg-gray-50 dark:bg-gray-700/50 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm'
+                                                ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 shadow-sm'
+                                                : 'bg-gray-50 dark:bg-gray-700/50 border-l-4 border-transparent hover:border-gray-300 dark:hover:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'
                                         }`}
                                     >
-                                        <div className="flex items-start justify-between gap-2">
-                                            <div className="flex-1 min-w-0">
-                                                {/* Encabezado con icono y tipo */}
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <span className="text-xl">{style.icon}</span>
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className={`text-sm font-bold ${style.text}`}>
-                                                                {translateClassName(className)}
-                                                            </span>
-                                                            <span className="text-xs font-mono text-gray-500 dark:text-gray-400">
-                                                                #{track.trackId}
-                                                            </span>
-                                                            {active && (
-                                                                <span className="flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400">
-                                                                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                                                                    EN VIVO
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                {/* Track ID y tiempo */}
+                                                <span className="text-xs font-mono text-gray-500 dark:text-gray-400 w-8">
+                                                    #{track.trackId}
+                                                </span>
+                                                <div className="flex items-center gap-1 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                                    <Clock className="w-3 h-3" />
+                                                    <span className="font-mono">{formatTime(track.startTimeSeconds)}</span>
                                                 </div>
-
-                                                {/* Información de tiempo */}
-                                                <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                                    <div className="flex items-center gap-1 font-semibold">
-                                                        <Clock className="w-3 h-3" />
-                                                        <span className="font-mono">{formatTime(track.startTimeSeconds)}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <Camera className="w-3 h-3" />
-                                                        <span>{track.detections} frames</span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                    Duración: <span className="font-semibold">{formatDuration(track.durationSeconds)}</span>
+                                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                    {formatDuration(track.durationSeconds)}
+                                                </span>
+                                                <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                                                    <Camera className="w-3 h-3" />
+                                                    <span>{track.detections}f</span>
                                                 </div>
                                             </div>
 
-                                            <ChevronRight className={`w-5 h-5 flex-shrink-0 transition-colors ${
-                                                active ? 'text-blue-500' : 'text-gray-400'
-                                            }`} />
+                                            <div className="flex items-center gap-2">
+                                                {active && (
+                                                    <span className="flex items-center gap-1 text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-1.5 py-0.5 rounded">
+                                                        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                                                        VIVO
+                                                    </span>
+                                                )}
+                                                <ChevronRight className={`w-4 h-4 flex-shrink-0 transition-colors ${
+                                                    active ? 'text-blue-500' : 'text-gray-400'
+                                                }`} />
+                                            </div>
                                         </div>
                                     </button>
                                 );
