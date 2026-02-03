@@ -3,6 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute, LoginPage } from '@features/auth';
 import { MainLayout } from '@shared/layout';
 import { ROUTES } from '@/core/router/routes';
+import { useAuthStore, selectIsAuthenticated } from '@features/auth/store/useAuthStore';
+import { useUserRoles } from '@features/auth/hooks/useUserRoles';
+import { getInitialRoute } from '@features/auth/config/rolePermissions';
 
 // Lazy load de páginas para code splitting
 const DashboardPage = lazy(() => import('@features/tracking').then(m => ({ default: m.DashboardPage })));
@@ -33,6 +36,18 @@ const UnderConstruction = ({ title }: { title: string }) => (
         <p className="text-gray-600 dark:text-gray-400 mt-2">Página en construcción</p>
     </div>
 );
+
+const SmartRedirect = () => {
+    const isAuthenticated = useAuthStore(selectIsAuthenticated);
+    const { roles } = useUserRoles();
+
+    if (!isAuthenticated) {
+        return <Navigate to={ROUTES.LOGIN} replace />;
+    }
+
+    const initialRoute = getInitialRoute(roles);
+    return <Navigate to={initialRoute} replace />;
+};
 
 /**
  * AppRouter - Configuración centralizada de rutas
@@ -234,9 +249,9 @@ export const AppRouter = () => {
                     }
                 />
 
-                {/* Redirecciones */}
-                <Route path={ROUTES.ROOT} element={<Navigate to={ROUTES.DASHBOARD} replace />} />
-                <Route path={ROUTES.WILDCARD} element={<Navigate to={ROUTES.DASHBOARD} replace />} />
+                {/* Redirecciones inteligentes según rol */}
+                <Route path={ROUTES.ROOT} element={<SmartRedirect />} />
+                <Route path={ROUTES.WILDCARD} element={<SmartRedirect />} />
             </Routes>
         </BrowserRouter>
     );

@@ -61,6 +61,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
             '/drones',
             '/settings',
             '/geofences',
+            '/monitoring'
         ],
         modules: {
             dashboard: false,      // No tiene acceso al dashboard
@@ -71,7 +72,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
             users: true,
             reports: false,        // Oculta por ahora
             analytics: false,      // Oculta por ahora
-            monitoring: false,     // No tiene acceso a monitoreo de video
+            monitoring: true,     // No tiene acceso a monitoreo de video
             settings: true,
         },
         missionActions: {
@@ -177,10 +178,7 @@ export const hasRouteAccess = (userRoles: string[], routePath: string): boolean 
         return false;
     }
 
-    if (userRoles.includes('admin')) {
-        return true;
-    }
-
+    // Verificar permisos de cada rol (incluyendo admin)
     for (const role of userRoles as UserRole[]) {
         const permissions = ROLE_PERMISSIONS[role];
         if (!permissions) continue;
@@ -255,4 +253,25 @@ export const hasMissionActionAccess = (
     }
 
     return false;
+};
+
+/**
+ * Obtiene la ruta inicial según el rol del usuario
+ * Se usa para redirigir después del login o cuando se accede a rutas no permitidas
+ */
+export const getInitialRoute = (userRoles: string[]): string => {
+    const primaryRole = getPrimaryRole(userRoles);
+
+    if (!primaryRole) {
+        return '/login';
+    }
+
+    const permissions = ROLE_PERMISSIONS[primaryRole];
+
+    // Retornar la primera ruta permitida para el rol
+    if (permissions.routes.length > 0) {
+        return permissions.routes[0];
+    }
+
+    return '/login';
 };

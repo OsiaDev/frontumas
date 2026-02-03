@@ -25,7 +25,9 @@ export {
     ROLE_PERMISSIONS,
     hasRouteAccess,
     hasModuleAccess,
-    getPrimaryRole
+    getPrimaryRole,
+    hasMissionActionAccess,
+    getInitialRoute
 } from './config/rolePermissions';
 export type { UserRole, RolePermissions } from './config/rolePermissions';
 
