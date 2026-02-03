@@ -296,7 +296,7 @@ export const MissionPlaybackPage = () => {
                     </div>
 
                     {/* Panel central - Lista de Detecciones */}
-                    <div className="lg:col-span-3 h-full">
+                    <div className="lg:col-span-3 h-full min-h-0 overflow-hidden">
                         {isLoadingTracks ? (
                             <div className="bg-white dark:bg-gray-800 rounded-lg shadow h-full flex items-center justify-center">
                                 <div className="text-center">
@@ -324,7 +324,7 @@ export const MissionPlaybackPage = () => {
                                 <MetricCard
                                     icon={<Gauge className="w-4 h-4" />}
                                     label="Velocidad"
-                                    value={currentTelemetry ? `${currentTelemetry.groundSpeed?.toFixed(1) || '0'} m/s` : '--'}
+                                    value={currentTelemetry ? `${currentTelemetry.speed?.toFixed(1) || '0'} m/s` : '--'}
                                     color="blue"
                                 />
                                 <MetricCard
@@ -342,7 +342,7 @@ export const MissionPlaybackPage = () => {
                                 <MetricCard
                                     icon={<Battery className="w-4 h-4" />}
                                     label="Batería"
-                                    value={currentTelemetry ? `${currentTelemetry.batteryPercentage?.toFixed(0) || '0'}%` : '--'}
+                                    value={currentTelemetry ? `${currentTelemetry.batteryLevel?.toFixed(0) || '0'}%` : '--'}
                                     color="yellow"
                                 />
                             </div>
