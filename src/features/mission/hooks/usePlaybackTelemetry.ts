@@ -113,8 +113,16 @@ export const usePlaybackTelemetry = ({
         console.log('[Telemetry] API Request URL:', url);
 
         try {
-            // Usar apiService que incluye el token de autenticación automáticamente
-            const apiData = await apiService.get<ApiTelemetryResponse[]>(url);
+
+            const apiData = await apiService.get<ApiTelemetryResponse[]>(
+                `/telemetry/vehicle/${vehicleId}/range`,
+                {
+                    params: {
+                        startDate,
+                        endDate,
+                    }
+                }
+            );
 
             // Mapear respuesta del API a estructura interna y ordenar por timestamp
             const mappedData = apiData.map(mapApiResponseToTelemetryPoint);
