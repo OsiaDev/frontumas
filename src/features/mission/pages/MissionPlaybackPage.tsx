@@ -153,6 +153,7 @@ export const MissionPlaybackPage = () => {
     // Estado para detecciones de video
     const [videoTracks, setVideoTracks] = useState<VideoTrack[]>([]);
     const [isLoadingTracks, setIsLoadingTracks] = useState(false);
+    const tracksLoadedRef = useRef<string | null>(null);
 
     // Datos del dron seleccionado (primer dron de la misión)
     const selectedDrone = mission?.assignedDrones?.[0];
@@ -174,7 +175,7 @@ export const MissionPlaybackPage = () => {
 
     // Estado del playback
     const [currentVideoTime, setCurrentVideoTime] = useState(0);
-    const [_videoDuration, setVideoDuration] = useState(0);
+    const [videoDuration, setVideoDuration] = useState(0);
 
     // Cargar datos de la misión
     useEffect(() => {
@@ -220,6 +221,13 @@ export const MissionPlaybackPage = () => {
         const loadVideoTracks = async () => {
             if (!missionId) return;
 
+            // Evitar solicitudes duplicadas para el mismo missionId
+            if (tracksLoadedRef.current === missionId) {
+                console.log('[VideoTracks] Skipping duplicate request for same mission');
+                return;
+            }
+            tracksLoadedRef.current = missionId;
+
             setIsLoadingTracks(true);
             try {
                 const tracks = await missionsApiService.getVideoTracks(missionId);
@@ -236,6 +244,7 @@ export const MissionPlaybackPage = () => {
     }, [missionId]);
 
     // Hook de telemetría sincronizada
+    // Solo se habilita cuando tenemos la duración del video (> 0)
     const {
         telemetryData,
         currentTelemetry,
@@ -245,7 +254,8 @@ export const MissionPlaybackPage = () => {
     } = usePlaybackTelemetry({
         vehicleId,
         videoStartTimestamp,
-        enabled: !!mission && !!vehicleId
+        videoDurationSeconds: videoDuration,
+        enabled: !!mission && !!vehicleId && videoDuration > 0
     });
 
     // Callback para actualización de tiempo del video

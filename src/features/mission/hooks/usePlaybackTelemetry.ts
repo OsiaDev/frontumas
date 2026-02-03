@@ -38,7 +38,8 @@ interface ApiTelemetryResponse {
 
 interface UsePlaybackTelemetryOptions {
     vehicleId: string;
-    videoStartTimestamp: number; // Unix timestamp when the video recording started
+    videoStartTimestamp: number; // Unix timestamp (ms) when the video recording started
+    videoDurationSeconds: number; // Duration of the video in seconds
     enabled?: boolean;
 }
 
@@ -89,6 +90,7 @@ const mapApiResponseToTelemetryPoint = (apiData: ApiTelemetryResponse): Telemetr
 export const usePlaybackTelemetry = ({
     vehicleId,
     videoStartTimestamp,
+    videoDurationSeconds,
     enabled = true
 }: UsePlaybackTelemetryOptions): UsePlaybackTelemetryReturn => {
     const [telemetryData, setTelemetryData] = useState<TelemetryPoint[]>([]);
@@ -97,6 +99,7 @@ export const usePlaybackTelemetry = ({
     const [error, setError] = useState<string | null>(null);
 
     const telemetryIndexRef = useRef(0);
+    const lastLoadedRangeRef = useRef<string | null>(null);
 
     /**
      * Carga telemetría en un rango de fechas desde el API
@@ -106,6 +109,9 @@ export const usePlaybackTelemetry = ({
 
         setIsLoading(true);
         setError(null);
+
+        const url = `/telemetry/vehicle/${vehicleId}/range?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
+        console.log('[Telemetry] API Request URL:', url);
 
         try {
 
@@ -201,34 +207,40 @@ export const usePlaybackTelemetry = ({
 
     // Cargar telemetría inicial cuando se habilita el hook
     useEffect(() => {
-        if (!enabled || !vehicleId || !videoStartTimestamp) return;
+        if (!enabled || !vehicleId || !videoStartTimestamp || !videoDurationSeconds) return;
 
-        // Calcular rango de fechas basado en el timestamp del video
-        // Usamos el día completo de la fecha de la misión para capturar toda la telemetría
-        // ya que puede haber diferencias de timezone entre el startDate y los timestamps reales
-        const missionDate = new Date(videoStartTimestamp);
+        // Calcular rango de fechas basado en el timestamp de inicio y duración del video
+        // startDate = timestamp de inicio del video
+        // endDate = startDate + duración del video + margen de 60 segundos
+        const startDate = new Date(videoStartTimestamp);
+        const endDate = new Date(videoStartTimestamp + (videoDurationSeconds * 1000) + 60000); // +60s de margen
 
-        // Inicio del día UTC
-        const startDate = new Date(Date.UTC(
-            missionDate.getUTCFullYear(),
-            missionDate.getUTCMonth(),
-            missionDate.getUTCDate(),
-            0, 0, 0, 0
-        ));
+        // Formatear fechas para el backend (LocalDateTime sin timezone)
+        // El backend espera formato: yyyy-MM-dd'T'HH:mm:ss (sin 'Z', sin milisegundos)
+        const formatForBackend = (date: Date): string => {
+            return date.toISOString().replace('Z', '').split('.')[0];
+        };
 
-        // Fin del día UTC
-        const endDate = new Date(Date.UTC(
-            missionDate.getUTCFullYear(),
-            missionDate.getUTCMonth(),
-            missionDate.getUTCDate(),
-            23, 59, 59, 999
-        ));
+        const startDateStr = formatForBackend(startDate);
+        const endDateStr = formatForBackend(endDate);
 
-        loadTelemetryRange(
-            startDate.toISOString(),
-            endDate.toISOString()
-        );
-    }, [enabled, vehicleId, videoStartTimestamp, loadTelemetryRange]);
+        // Evitar solicitudes duplicadas si el rango no ha cambiado
+        const rangeKey = `${vehicleId}-${startDateStr}-${endDateStr}`;
+        if (lastLoadedRangeRef.current === rangeKey) {
+            console.log('[Telemetry] Skipping duplicate request for same range');
+            return;
+        }
+        lastLoadedRangeRef.current = rangeKey;
+
+        console.log('[Telemetry] Loading range:', {
+            vehicleId,
+            startDate: startDateStr,
+            endDate: endDateStr,
+            videoDurationSeconds
+        });
+
+        loadTelemetryRange(startDateStr, endDateStr);
+    }, [enabled, vehicleId, videoStartTimestamp, videoDurationSeconds, loadTelemetryRange]);
 
     return {
         telemetryData,
