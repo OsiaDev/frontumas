@@ -61,6 +61,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
             '/drones',
             '/settings',
             '/geofences',
+            '/monitoring'
         ],
         modules: {
             dashboard: false,      // No tiene acceso al dashboard
@@ -71,7 +72,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
             users: true,
             reports: false,        // Oculta por ahora
             analytics: false,      // Oculta por ahora
-            monitoring: false,     // No tiene acceso a monitoreo de video
+            monitoring: true,     // No tiene acceso a monitoreo de video
             settings: true,
         },
         missionActions: {
