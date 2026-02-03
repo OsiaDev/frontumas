@@ -2,12 +2,30 @@ import type { IClientOptions } from 'mqtt';
 import type { TopicSubscription } from '@shared/types/drone.types';
 import { MqttTopics } from '@shared/types/drone.types';
 
+// Generar un clientId único y persistente para esta sesión del navegador
+// Esto evita conflictos cuando hay HMR o React StrictMode
+const getOrCreateClientId = (): string => {
+    const envClientId = import.meta.env.VITE_MQTT_CLIENT_ID;
+    if (envClientId) return envClientId;
+
+    // Intentar recuperar el clientId de sessionStorage para mantener consistencia
+    const storageKey = 'mqtt_client_id';
+    let clientId = sessionStorage.getItem(storageKey);
+
+    if (!clientId) {
+        clientId = `umas-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+        sessionStorage.setItem(storageKey, clientId);
+    }
+
+    return clientId;
+};
+
 // Configuración del broker MQTT
 export const MQTT_BROKER_CONFIG = {
     url: import.meta.env.VITE_MQTT_BROKER_URL || 'ws://127.0.0.1:9001',
     username: import.meta.env.VITE_MQTT_USERNAME || '',
     password: import.meta.env.VITE_MQTT_PASSWORD || '',
-    clientId: import.meta.env.VITE_MQTT_CLIENT_ID || `umas-${Math.random().toString(16).slice(2, 10)}`,
+    clientId: getOrCreateClientId(),
 } as const;
 
 // Opciones del cliente MQTT
