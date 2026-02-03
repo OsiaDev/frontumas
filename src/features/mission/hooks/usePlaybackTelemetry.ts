@@ -216,9 +216,15 @@ export const usePlaybackTelemetry = ({
         const endDate = new Date(videoStartTimestamp + (videoDurationSeconds * 1000) + 60000); // +60s de margen
 
         // Formatear fechas para el backend (LocalDateTime sin timezone)
-        // El backend espera formato: yyyy-MM-dd'T'HH:mm:ss (sin 'Z', sin milisegundos)
+        // El backend espera formato: yyyy-MM-dd'T'HH:mm:ss en hora LOCAL (no UTC)
         const formatForBackend = (date: Date): string => {
-            return date.toISOString().replace('Z', '').split('.')[0];
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
         };
 
         const startDateStr = formatForBackend(startDate);

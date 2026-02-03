@@ -1,10 +1,8 @@
 import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
 import { useAuthStore, selectIsAuthenticated } from '@/features/auth/store/useAuthStore';
 import { useUserRoles } from '@/features/auth/hooks/useUserRoles';
 import { hasRouteAccess, getInitialRoute } from '@/features/auth/config/rolePermissions';
-import { authService } from '@/features/auth/services/auth.service';
 
 interface ProtectedRouteProps {
     children: ReactNode;
@@ -14,24 +12,8 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
     const isAuthenticated = useAuthStore(selectIsAuthenticated);
     const isLoading = useAuthStore((state) => state.isLoading);
-    const logout = useAuthStore((state) => state.logout);
     const { roles } = useUserRoles();
     const location = useLocation();
-
-    // Verificar si el estado de Keycloak coincide con el estado del store
-    useEffect(() => {
-        const authMode = authService.getAuthMode();
-
-        if (authMode === 'keycloak' && isAuthenticated) {
-            const keycloak = authService.getKeycloakInstance();
-
-            // Si el store dice autenticado pero Keycloak dice lo contrario, cerrar sesión
-            if (!keycloak.authenticated || !keycloak.token) {
-                console.log('[ProtectedRoute] Desincronización detectada: store autenticado pero Keycloak no. Cerrando sesión...');
-                //logout();
-            }
-        }
-    }, [isAuthenticated, logout]);
 
     if (isLoading) {
         return (

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { mqttService } from '@features/tracking/services/mqtt/mqtt.service';
 import { mqttHandlers } from '@features/tracking/services/mqtt/mqtt.handlers';
 import { useDroneStore } from '@features/drones';
@@ -9,6 +9,7 @@ import { INITIAL_SUBSCRIPTIONS } from '@config/mqtt.config';
 // Estado global fuera de React para evitar problemas con StrictMode
 let isGloballyInitialized = false;
 let globalCleanupFunctions: Array<() => void> = [];
+let connectionInProgress = false;
 
 /**
  * MqttInitializer - Inicializa y mantiene la conexión MQTT global
@@ -20,32 +21,34 @@ let globalCleanupFunctions: Array<() => void> = [];
  * - Actualiza los stores de Zustand (drones, geofence, mqtt status)
  */
 export const MqttInitializer = () => {
-    const updateDroneLocation = useDroneStore((state) => state.updateDroneLocation);
-    const addGeofenceEvent = useGeofenceEventsStore((state) => state.addEvent);
-    const { setStatus, setError, incrementMessageCount, setLastMessage } = useMqttStore();
+    // Usar refs para las funciones de Zustand para evitar re-ejecución del useEffect
+    const updateDroneLocationRef = useRef(useDroneStore.getState().updateDroneLocation);
+    const addGeofenceEventRef = useRef(useGeofenceEventsStore.getState().addEvent);
+    const mqttStoreRef = useRef(useMqttStore.getState());
+
+    // Mantener refs actualizados sin causar re-renders
+    useEffect(() => {
+        updateDroneLocationRef.current = useDroneStore.getState().updateDroneLocation;
+        addGeofenceEventRef.current = useGeofenceEventsStore.getState().addEvent;
+        mqttStoreRef.current = useMqttStore.getState();
+    });
 
     useEffect(() => {
-        // Si ya está inicializado globalmente, solo re-registrar los handlers de React
+        // Si ya está inicializado globalmente, no hacer nada
         if (isGloballyInitialized) {
-            // Re-registrar handlers que usan funciones de React/Zustand
-            const unsubscribeLocation = mqttHandlers.onLocation((message) => {
-                updateDroneLocation(message);
-                incrementMessageCount();
-                setLastMessage(message);
-            });
+            console.log('[MqttInitializer] Ya inicializado, saltando...');
+            return;
+        }
 
-            const unsubscribeGeoEvent = mqttHandlers.onGeoEvent((event) => {
-                addGeofenceEvent(event);
-            });
-
-            return () => {
-                unsubscribeLocation();
-                unsubscribeGeoEvent();
-            };
+        // Evitar inicialización concurrente
+        if (connectionInProgress) {
+            console.log('[MqttInitializer] Conexión en progreso, saltando...');
+            return;
         }
 
         // Primera inicialización
         isGloballyInitialized = true;
+        connectionInProgress = true;
 
         // Función para suscribirse a topics iniciales
         const subscribeToInitialTopics = async () => {
@@ -67,53 +70,58 @@ export const MqttInitializer = () => {
 
         // Registrar handler de conexión - aquí hacemos las suscripciones
         const unsubscribeConnect = mqttService.onConnect(() => {
-            setStatus('CONNECTED');
-            setError(null);
+            mqttStoreRef.current.setStatus('CONNECTED');
+            mqttStoreRef.current.setError(null);
             subscribeToInitialTopics();
         });
         globalCleanupFunctions.push(unsubscribeConnect);
 
         // Registrar handler de desconexión
         const unsubscribeDisconnect = mqttService.onDisconnect(() => {
-            setStatus('DISCONNECTED');
+            mqttStoreRef.current.setStatus('DISCONNECTED');
         });
         globalCleanupFunctions.push(unsubscribeDisconnect);
 
         // Registrar handler de errores
         const unsubscribeError = mqttService.onError((err) => {
-            setError(err);
-            setStatus('ERROR');
+            mqttStoreRef.current.setError(err);
+            mqttStoreRef.current.setStatus('ERROR');
         });
         globalCleanupFunctions.push(unsubscribeError);
 
-        // Registrar callbacks para datos
+        // Registrar callbacks para datos usando refs
         const unsubscribeLocation = mqttHandlers.onLocation((message) => {
-            updateDroneLocation(message);
-            incrementMessageCount();
-            setLastMessage(message);
+            updateDroneLocationRef.current(message);
+            mqttStoreRef.current.incrementMessageCount();
+            mqttStoreRef.current.setLastMessage(message);
         });
         globalCleanupFunctions.push(unsubscribeLocation);
 
         const unsubscribeGeoEvent = mqttHandlers.onGeoEvent((event) => {
-            addGeofenceEvent(event);
+            addGeofenceEventRef.current(event);
         });
         globalCleanupFunctions.push(unsubscribeGeoEvent);
 
         // Conectar al broker
-        setStatus('CONNECTING');
-        mqttService.connect().catch((err) => {
-            const connectionError = err instanceof Error ? err : new Error('Error de conexión MQTT');
-            setError(connectionError);
-            setStatus('ERROR');
-            console.error('[MqttInitializer] Error al conectar:', connectionError);
-        });
+        mqttStoreRef.current.setStatus('CONNECTING');
+        mqttService.connect()
+            .then(() => {
+                connectionInProgress = false;
+            })
+            .catch((err) => {
+                connectionInProgress = false;
+                const connectionError = err instanceof Error ? err : new Error('Error de conexión MQTT');
+                mqttStoreRef.current.setError(connectionError);
+                mqttStoreRef.current.setStatus('ERROR');
+                console.error('[MqttInitializer] Error al conectar:', connectionError);
+            });
 
         // En desarrollo con StrictMode, no hacer cleanup real
         // La conexión persiste durante toda la vida de la app
         return () => {
             // No limpiar en desarrollo - StrictMode causa unmount/remount
         };
-    }, [updateDroneLocation, addGeofenceEvent, setStatus, setError, incrementMessageCount, setLastMessage]);
+    }, []); // Sin dependencias - solo se ejecuta una vez
 
     return null;
 };
