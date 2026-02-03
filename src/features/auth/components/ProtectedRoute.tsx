@@ -1,10 +1,8 @@
 import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useEffect, useRef } from 'react';
 import { useAuthStore, selectIsAuthenticated } from '@/features/auth/store/useAuthStore';
 import { useUserRoles } from '@/features/auth/hooks/useUserRoles';
 import { hasRouteAccess, getInitialRoute } from '@/features/auth/config/rolePermissions';
-import { authService } from '@/features/auth/services/auth.service';
 
 interface ProtectedRouteProps {
     children: ReactNode;
@@ -14,33 +12,8 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
     const isAuthenticated = useAuthStore(selectIsAuthenticated);
     const isLoading = useAuthStore((state) => state.isLoading);
-    const logout = useAuthStore((state) => state.logout);
     const { roles } = useUserRoles();
     const location = useLocation();
-
-    // Verificar si el estado de Keycloak coincide con el estado del store
-    // Solo verificar una vez al montar, no en cada render
-    const hasCheckedSyncRef = useRef(false);
-
-    useEffect(() => {
-        // Solo verificar una vez
-        if (hasCheckedSyncRef.current) return;
-        hasCheckedSyncRef.current = true;
-
-        const authMode = authService.getAuthMode();
-
-        // Solo verificar si usamos Keycloak Y el store dice que estamos autenticados
-        if (authMode === 'keycloak' && isAuthenticated) {
-            const keycloak = authService.getKeycloakInstance();
-
-            // Si el store dice autenticado pero Keycloak dice lo contrario, limpiar estado
-            if (!keycloak.authenticated || !keycloak.token) {
-                console.log('[ProtectedRoute] Desincronización detectada: limpiando estado...');
-                // Limpiar el estado del store para forzar re-login
-                logout();
-            }
-        }
-    }, [isAuthenticated, logout]);
 
     if (isLoading) {
         return (
