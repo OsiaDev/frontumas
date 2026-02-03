@@ -4,7 +4,7 @@ import { Battery, Navigation, Clock, Compass, MapPin } from 'lucide-react';
 import { DEFAULT_CITY, MAP_TILE_CONFIG, MAP_ZOOM_CONFIG } from '@config/map.config';
 import type { TelemetryPoint } from '@features/mission/hooks/usePlaybackTelemetry';
 import type { Route } from '@shared/types/route.types';
-import type { LatLngExpression, LatLngBounds } from 'leaflet';
+import type { LatLngExpression, LatLngBounds, Point } from 'leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -149,7 +149,7 @@ export const PlaybackMap = ({
             </div>
 
             {/* Telemetry Info */}
-            {currentTelemetry && (
+            {/*currentTelemetry && (
                 <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                     <div className="grid grid-cols-4 gap-2">
                         <div className="text-center">
@@ -190,7 +190,7 @@ export const PlaybackMap = ({
                         </div>
                     </div>
                 </div>
-            )}
+            )*/}
 
             {/* Map */}
             <div className="flex-1 relative min-h-0">
