@@ -153,6 +153,7 @@ export const MissionPlaybackPage = () => {
     // Estado para detecciones de video
     const [videoTracks, setVideoTracks] = useState<VideoTrack[]>([]);
     const [isLoadingTracks, setIsLoadingTracks] = useState(false);
+    const tracksLoadedRef = useRef<string | null>(null);
 
     // Datos del dron seleccionado (primer dron de la misión)
     const selectedDrone = mission?.assignedDrones?.[0];
@@ -219,6 +220,13 @@ export const MissionPlaybackPage = () => {
     useEffect(() => {
         const loadVideoTracks = async () => {
             if (!missionId) return;
+
+            // Evitar solicitudes duplicadas para el mismo missionId
+            if (tracksLoadedRef.current === missionId) {
+                console.log('[VideoTracks] Skipping duplicate request for same mission');
+                return;
+            }
+            tracksLoadedRef.current = missionId;
 
             setIsLoadingTracks(true);
             try {

@@ -99,6 +99,7 @@ export const usePlaybackTelemetry = ({
     const [error, setError] = useState<string | null>(null);
 
     const telemetryIndexRef = useRef(0);
+    const lastLoadedRangeRef = useRef<string | null>(null);
 
     /**
      * Carga telemetría en un rango de fechas desde el API
@@ -222,6 +223,14 @@ export const usePlaybackTelemetry = ({
 
         const startDateStr = formatForBackend(startDate);
         const endDateStr = formatForBackend(endDate);
+
+        // Evitar solicitudes duplicadas si el rango no ha cambiado
+        const rangeKey = `${vehicleId}-${startDateStr}-${endDateStr}`;
+        if (lastLoadedRangeRef.current === rangeKey) {
+            console.log('[Telemetry] Skipping duplicate request for same range');
+            return;
+        }
+        lastLoadedRangeRef.current = rangeKey;
 
         console.log('[Telemetry] Loading range:', {
             vehicleId,
