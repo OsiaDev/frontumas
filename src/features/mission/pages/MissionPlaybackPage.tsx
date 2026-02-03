@@ -1,13 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Video, Clock, Calendar, Gauge, Navigation, Battery, Mountain, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Video, Clock, Calendar, Navigation, AlertCircle, Gauge, Mountain, Compass, Battery } from 'lucide-react';
 import { PlaybackVideoPlayer, PlaybackVideoPlayerRef } from '@/features/mission/components/PlaybackVideoPlayer';
 import { PlaybackMap } from '@/features/mission/components/PlaybackMap';
 import { DetectionsList } from '@/features/mission/components/DetectionsList';
-import {
-    usePlaybackTelemetry,
-    TelemetryPoint
-} from '@features/mission/hooks/usePlaybackTelemetry';
+import { usePlaybackTelemetry } from '@features/mission/hooks/usePlaybackTelemetry';
 import { missionsApiService } from '@features/missions/services/missions.api.service';
 import { routesApiService } from '@features/routes/services/routes.api.service';
 import type { Mission } from '@shared/types/mission.types';
@@ -17,124 +14,32 @@ import type { VideoTrack } from '@shared/types/detection.types';
 // URL base para videos grabados por misión (nginx proxy con playback)
 const RECORDINGS_BASE_URL = import.meta.env.VITE_RECORDINGS_URL || 'http://localhost:8090';
 
-// Componente para mostrar una métrica individual
-interface MetricCardProps {
+// Componente para mostrar métricas de telemetría
+const MetricCard = ({
+    icon,
+    label,
+    value,
+    color
+}: {
     icon: React.ReactNode;
     label: string;
-    value: string | number;
-    unit?: string;
-    colorClass?: string;
-}
-
-const MetricCard = ({ icon, label, value, unit, colorClass = 'text-blue-500' }: MetricCardProps) => (
-    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2">
-        <div className="flex items-center gap-1 mb-0.5">
-            <span className={colorClass}>{icon}</span>
-            <span className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">{label}</span>
-        </div>
-        <div className="flex items-baseline gap-0.5">
-            <span className="text-base font-bold text-gray-900 dark:text-white">{value}</span>
-            {unit && <span className="text-[10px] text-gray-500 dark:text-gray-400">{unit}</span>}
-        </div>
-    </div>
-);
-
-// Panel de métricas compacto para layout horizontal
-interface TelemetryPanelProps {
-    telemetry: TelemetryPoint | null;
-    videoTime: number;
-}
-
-const TelemetryPanel = ({ telemetry, videoTime }: TelemetryPanelProps) => {
-    const formatTime = (seconds: number): string => {
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    value: string;
+    color: 'blue' | 'green' | 'purple' | 'yellow';
+}) => {
+    const colorClasses = {
+        blue: 'text-blue-500 bg-blue-50 dark:bg-blue-900/20',
+        green: 'text-green-500 bg-green-50 dark:bg-green-900/20',
+        purple: 'text-purple-500 bg-purple-50 dark:bg-purple-900/20',
+        yellow: 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20'
     };
-
-    // Helper para formatear valores numéricos de forma segura
-    const safeFixed = (value: number | null | undefined, decimals: number): string => {
-        if (value === null || value === undefined || isNaN(value)) {
-            return '--';
-        }
-        return value.toFixed(decimals);
-    };
-
-    // Helper para formatear timestamps correctamente
-    // El backend guarda timestamps en hora local de Colombia (sin timezone)
-    const formatTimestamp = (timestamp: string): string => {
-        const date = new Date(timestamp);
-        return date.toLocaleTimeString('es-CO', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        });
-    };
-
-    if (!telemetry) {
-        return (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 h-full flex items-center justify-center">
-                <p className="text-gray-500 dark:text-gray-400 text-sm">Esperando telemetría...</p>
-            </div>
-        );
-    }
-
-    const batteryLevel = telemetry.batteryLevel ?? 0;
-    const batteryColorClass = batteryLevel > 50 ? 'text-green-500' : batteryLevel > 20 ? 'text-yellow-500' : 'text-red-500';
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 h-full">
-            <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wide">
-                    Telemetría
-                </h3>
-                <span className="text-xs font-mono bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded">
-                    {formatTime(videoTime)}
-                </span>
+        <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
+            <div className="flex items-center gap-1.5 mb-0.5">
+                <span className={colorClasses[color].split(' ')[0]}>{icon}</span>
+                <span className="text-xs text-gray-600 dark:text-gray-400">{label}</span>
             </div>
-
-            <div className="grid grid-cols-4 gap-2">
-                <MetricCard
-                    icon={<Gauge className="w-3 h-3" />}
-                    label="Velocidad"
-                    value={safeFixed(telemetry.speed, 1)}
-                    unit="m/s"
-                    colorClass="text-green-500"
-                />
-                <MetricCard
-                    icon={<Mountain className="w-3 h-3" />}
-                    label="Altitud"
-                    value={safeFixed(telemetry.altitude, 1)}
-                    unit="m"
-                    colorClass="text-blue-500"
-                />
-                <MetricCard
-                    icon={<Navigation className="w-3 h-3" />}
-                    label="Rumbo"
-                    value={safeFixed(telemetry.heading, 0)}
-                    unit="°"
-                    colorClass="text-purple-500"
-                />
-                <MetricCard
-                    icon={<Battery className="w-3 h-3" />}
-                    label="Batería"
-                    value={safeFixed(telemetry.batteryLevel, 0)}
-                    unit="%"
-                    colorClass={batteryColorClass}
-                />
-            </div>
-
-            <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                <div>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">Coordenadas: </span>
-                    <span className="font-mono text-xs text-gray-900 dark:text-white">
-                        {safeFixed(telemetry.latitude, 6)}, {safeFixed(telemetry.longitude, 6)}
-                    </span>
-                </div>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {telemetry.timestamp ? formatTimestamp(telemetry.timestamp) : '--:--:--'}
-                </span>
-            </div>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">{value}</p>
         </div>
     );
 };
@@ -365,29 +270,6 @@ export const MissionPlaybackPage = () => {
                     </div>
                 </div>
 
-                {/* Telemetry Status */}
-                <div className="flex items-center gap-4 text-sm">
-                    {isTelemetryLoading && (
-                        <span className="text-yellow-600 dark:text-yellow-400">
-                            Cargando telemetría...
-                        </span>
-                    )}
-                    {telemetryError && (
-                        <span className="text-red-600 dark:text-red-400">
-                            Error: {telemetryError}
-                        </span>
-                    )}
-                    {!isTelemetryLoading && !telemetryError && telemetryData.length > 0 && (
-                        <span className="text-green-600 dark:text-green-400">
-                            {telemetryData.length} puntos de telemetría cargados
-                        </span>
-                    )}
-                    {!isTelemetryLoading && !telemetryError && telemetryData.length === 0 && (
-                        <span className="text-gray-500 dark:text-gray-400">
-                            No hay telemetría disponible para este período
-                        </span>
-                    )}
-                </div>
             </div>
 
             {/* Main Content - Grid de 3 columnas: Video (izq), Detecciones (centro), Telemetría+Mapa (der) */}
@@ -432,17 +314,42 @@ export const MissionPlaybackPage = () => {
                     </div>
 
                     {/* Panel derecho - Telemetría arriba, Mapa abajo */}
-                    <div className="lg:col-span-3 flex flex-col gap-3 h-full">
-                        {/* Telemetry Panel - altura fija */}
-                        <div className="flex-shrink-0">
-                            <TelemetryPanel
-                                telemetry={currentTelemetry}
-                                videoTime={currentVideoTime}
-                            />
+                    <div className="lg:col-span-3 h-full flex flex-col gap-3">
+                        {/* Panel de Telemetría */}
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 flex-shrink-0">
+                            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                Telemetría en tiempo de video
+                            </h4>
+                            <div className="grid grid-cols-2 gap-2">
+                                <MetricCard
+                                    icon={<Gauge className="w-4 h-4" />}
+                                    label="Velocidad"
+                                    value={currentTelemetry ? `${currentTelemetry.groundSpeed?.toFixed(1) || '0'} m/s` : '--'}
+                                    color="blue"
+                                />
+                                <MetricCard
+                                    icon={<Mountain className="w-4 h-4" />}
+                                    label="Altitud"
+                                    value={currentTelemetry ? `${currentTelemetry.altitude?.toFixed(1) || '0'} m` : '--'}
+                                    color="green"
+                                />
+                                <MetricCard
+                                    icon={<Compass className="w-4 h-4" />}
+                                    label="Rumbo"
+                                    value={currentTelemetry ? `${currentTelemetry.heading?.toFixed(0) || '0'}°` : '--'}
+                                    color="purple"
+                                />
+                                <MetricCard
+                                    icon={<Battery className="w-4 h-4" />}
+                                    label="Batería"
+                                    value={currentTelemetry ? `${currentTelemetry.batteryPercentage?.toFixed(0) || '0'}%` : '--'}
+                                    color="yellow"
+                                />
+                            </div>
                         </div>
 
-                        {/* Map - ocupa el resto del espacio */}
-                        <div className="flex-1 min-h-[200px]">
+                        {/* Mapa - ocupa el resto del espacio */}
+                        <div className="flex-1 min-h-0">
                             <PlaybackMap
                                 currentTelemetry={currentTelemetry}
                                 telemetryHistory={telemetryData}
