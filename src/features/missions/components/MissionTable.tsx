@@ -7,10 +7,12 @@ interface MissionTableProps {
     missions: Mission[];
     onApprove?: (mission: Mission) => void;
     onExecute?: (mission: Mission) => void;
-    onDelete: (mission: Mission) => void;
+    onDelete?: (mission: Mission) => void;
     onViewDetails?: (mission: Mission) => void;
     onFinalize?: (mission: Mission) => void;
     onAnalyzeVideo?: (mission: Mission) => void;
+    canPlayback?: boolean;
+    canMonitor?: boolean;
     isLoading?: boolean;
 }
 
@@ -55,6 +57,8 @@ export const MissionTable = ({
     onViewDetails,
     onFinalize,
     onAnalyzeVideo,
+    canPlayback = false,
+    canMonitor = false,
     isLoading = false,
 }: MissionTableProps) => {
     const navigate = useNavigate();
@@ -247,8 +251,8 @@ export const MissionTable = ({
                                             </button>
                                         )}
 
-                                        {/* Botón Controlar - Para misiones en ejecución o aprobadas */}
-                                        {(mission.state === 'EN_EJECUCION' || mission.state === 'APROBADA') && (
+                                        {/* Botón Controlar - Para misiones en ejecución o aprobadas (solo si tiene permiso de monitorear) */}
+                                        {canMonitor && (mission.state === 'EN_EJECUCION' || mission.state === 'APROBADA') && (
                                             <button
                                                 onClick={() => handleControlMission(mission)}
                                                 className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-primary hover:bg-primary-dark rounded-md transition-colors"
@@ -271,8 +275,8 @@ export const MissionTable = ({
                                             </button>
                                         )}
 
-                                        {/* Botón Playback - Para misiones finalizadas */}
-                                        {mission.state === 'FINALIZADA' && (
+                                        {/* Botón Playback - Para misiones finalizadas (solo si tiene permiso de playback) */}
+                                        {canPlayback && mission.state === 'FINALIZADA' && (
                                             <button
                                                 onClick={() => handlePlaybackMission(mission)}
                                                 className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 rounded-md transition-colors"
@@ -306,8 +310,8 @@ export const MissionTable = ({
                                             </button>
                                         )}
 
-                                        {/* Botón Eliminar - Solo para misiones finalizadas, abortadas o fallidas */}
-                                        {(mission.state === 'FINALIZADA' || mission.state === 'ABORTADA' || mission.state === 'FALLIDA') && (
+                                        {/* Botón Eliminar - Solo para misiones finalizadas, abortadas o fallidas (y si tiene permiso) */}
+                                        {onDelete && (mission.state === 'FINALIZADA' || mission.state === 'ABORTADA' || mission.state === 'FALLIDA') && (
                                             <button
                                                 onClick={() => onDelete(mission)}
                                                 className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
