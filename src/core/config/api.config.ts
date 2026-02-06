@@ -15,6 +15,7 @@ export const ADCONNECT_CONFIG = {
 export const API_ROUTES = {
     DRONES: {
         LIST: '/v1/drones',
+        ACTIVE: '/v1/drones/active',
         GET_BY_ID: (id: string) => `/v1/drones/${id}`,
         CREATE: '/v1/drones',
         UPDATE: (id: string) => `/v1/drones/${id}`,

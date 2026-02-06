@@ -18,6 +18,15 @@ class DronesApiService {
         }
     }
 
+    async getDronesActive(): Promise<DroneResponseDTO[]> {
+        try {
+            return await apiService.get<DroneResponseDTO[]>(API_ROUTES.DRONES.ACTIVE);
+        } catch (error) {
+            console.error('Error obteniendo drones:', error);
+            throw error;
+        }
+    }
+
     async getDroneById(id: string): Promise<DroneResponseDTO> {
         try {
             return await apiService.get<DroneResponseDTO>(API_ROUTES.DRONES.GET_BY_ID(id));

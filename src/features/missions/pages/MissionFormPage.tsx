@@ -61,7 +61,7 @@ export const MissionFormPage = () => {
 
         try {
             const [dronesData, routesData, operatorsData] = await Promise.all([
-                dronesApiService.getDrones(),
+                dronesApiService.getDronesActive(),
                 routesApiService.getRoutes(),
                 operatorsApiService.getAllOperators(),
             ]);
